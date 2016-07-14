@@ -1,0 +1,37 @@
+﻿@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h1>Admin Dashboard</h1>
+@(Html.Kendo().Chart<OrderChartViewModel>()
+        .Name("orderChart")
+        .Title("Order Totals (" + DateTime.Now.Year + ")")
+        .DataSource(datasource => datasource
+        .Read(read => read.Action("ReadChartData", "Orders"))
+        .Group(group => {
+            group.Add(model => model.StatusName);
+        }
+    )
+    .Sort(sort => sort.Add(model => model.Order).Ascending())
+    )
+    .Series(series =>
+    {
+        series.Column(model => model.TotalSum)
+        .Name("#= group.value #");
+    })
+    .Legend(legend => legend.Position(ChartLegendPosition.Bottom))
+    .ValueAxis(axis => axis.Numeric()
+    .Labels(labels => labels.Format("${0}")
+    .Skip(2)
+    .Step(2)
+    ))
+    .CategoryAxis(axis => axis.Categories(model => model.Month)
+    .Labels(labels => labels.Format("{0}")
+    )
+    )
+    .Tooltip(tooltip => tooltip
+            .Visible(true)
+            .Template("#= value #")
+        )
+)
+

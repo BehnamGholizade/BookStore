@@ -1,0 +1,194 @@
+@model BookViewModel
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h2>Create</h2>
+
+@(Html.Kendo().Window()
+            .Name("modal")
+            .Modal(true)
+            .Visible(false)
+            .Draggable(true)
+            .AutoFocus(true)
+            .MinWidth(300)
+            .MinHeight(100)
+)
+<form asp-action="Create" role="form">
+    <div class="form-horizontal">
+        <h4>Book</h4>
+        <hr />
+        <div class="row">
+            <div class="col-md-6">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id" />
+                <div class="form-group">
+                    @Html.LabelFor(model => model.Id, new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.TextBoxFor(model => model.Id, new { @class = "form-control", @readonly = "readonly" })
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label asp-for="UpTitle" class="col-md-2 control-label"></label>
+                    <div class="col-md-10">
+                        <input asp-for="UpTitle" class="form-control" />
+                        <span asp-validation-for="UpTitle" class="text-danger" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Title" class="col-md-2 control-label"></label>
+                    <div class="col-md-10">
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label asp-for="SubTitle" class="col-md-2 control-label"></label>
+                    <div class="col-md-10">
+                        <input asp-for="SubTitle" class="form-control" />
+                        <span asp-validation-for="SubTitle" class="text-danger" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label asp-for="BookAuthors" class="col-md-2 control-label">Authors</label>
+                    <div class="col-md-10">
+                        @(Html.Kendo().MultiSelectFor(m => m.SelectedBookAuthorIds)
+            .DataTextField("Author.FullName") //Specify which property to be used by the MultiSelect as a text.
+            .DataValueField("Author.Id") //Specify which property to be used by the MultiSelect as a value.
+            .Placeholder("Select authors...")
+            .Value(Model.BookAuthors)
+            .AutoBind(true)
+            .Filter(FilterType.Contains)
+            .DataSource(source =>
+            {
+                source.Read(read =>
+                {
+                    read.Action("GetBookAuthors", "Authors", new { area = "Admin" });
+                });
+            }).HtmlAttributes(new { @class = "col-md-9" })
+                        )
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label asp-for="BookTags" class="col-md-2 control-label">Tags</label>
+                    <div class="col-md-10">
+                        @(Html.Kendo().MultiSelectFor(m => m.SelectedBookTagIds)
+            .DataTextField("Tag.Name") //Specify which property of the Product to be used by the MultiSelect as a text.
+            .DataValueField("Tag.Id") //Specify which property of the Product to be used by the MultiSelect as a value.
+            .Placeholder("Select tags...")
+            .Value(Model.BookTags)
+            .AutoBind(true)
+            .Filter(FilterType.Contains)
+            .DataSource(source =>
+            {
+                source.Read(read =>
+                {
+                    read.Action("GetBookTags", "Tags", new { area = "Admin" }); //Set the Action and Controller names.
+                });
+            }).HtmlAttributes(new { @class = "col-md-9" })
+                        )
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Contents" class="col-md-2 control-label"></label>
+                    <div class="col-md-10">
+                        <textarea asp-for="Contents" class="form-control"></textarea>
+                        <span asp-validation-for="Contents" class="text-danger" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label asp-for="EbookPrice" class="col-md-2 control-label">eBook Price</label>
+                    <div class="col-md-10">
+                        <input type="number" asp-for="EbookPrice" class="form-control" />
+                        <span asp-validation-for="EbookPrice" class="text-danger" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label asp-for="PrintPrice" class="col-md-2 control-label">Print Price</label>
+                    <div class="col-md-10">
+                        <input type="number" asp-for="PrintPrice" class="form-control" />
+                        <span asp-validation-for="PrintPrice" class="text-danger" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label asp-for="ShortDesc" class="col-md-2 control-label">Short Desription</label>
+                    <div class="col-md-10">
+                        <textarea asp-for="ShortDesc" class="form-control"></textarea>
+                        <span asp-validation-for="ShortDesc" class="text-danger" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label asp-for="FullDesc" class="col-md-2 control-label">Full Desription</label>
+                    <div class="col-md-10">
+                        <textarea asp-for="FullDesc" class="form-control"></textarea>
+                        <span asp-validation-for="FullDesc" class="text-danger" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Isbn" class="col-md-2 control-label"></label>
+                    <div class="col-md-10">
+                        <input asp-for="Isbn" class="form-control" />
+                        <span asp-validation-for="Isbn" class="text-danger" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Pages" class="col-md-2 control-label"></label>
+                    <div class="col-md-10">
+                        <input asp-for="Pages" class="form-control" />
+                        <span asp-validation-for="Pages" class="text-danger" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label asp-for="PublicationDate" class="col-md-2 control-label">Publication Date</label>
+                    <div class="col-md-10">
+                        @(Html.Kendo().DatePicker()
+                .Name("PublicationDate")
+                .Value(Model.PublicationDate)
+                .Format("dd MMM yyyy")
+                        )
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label asp-for="PublisherId" class="col-md-2 control-label">Publisher</label>
+                    <div class="col-md-10">
+                        @(Html.Kendo().DropDownListFor(m => m.PublisherId)
+                .OptionLabel("Select publisher...")
+                .DataTextField("Name")
+                .DataValueField("Id")
+                .DataSource(source => source
+          .Custom()
+          .Transport(transport => transport
+                .Read(read =>
+                {
+                    read.Action("Read", "Publishers", new { area = "Admin" });
+                })
+          )
+          .Schema(schema => schema
+                .Data("Data")
+                .Total("Total")
+                .Errors("errors")
+           )
+      ))
+                        <span asp-validation-for="PublisherId" class="text-danger" />
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" asp-for="ImgCoverUrl" />
+            <label>Cover</label>
+            <div class="col-md-6 col-sm-6 col-xs-10">
+                <div class="form-group">
+                    <img id="coverImg" src="@Model.ImgCoverUrl" alt="@Model.FullTitle" />
+                </div>
+                @* load Upload form & script *@
+                @await Html.PartialAsync("~/Templates/uploadForm.cshtml")
+            </div>
+        </div>
+        <hr>
+        <div class="form-group text-center">
+            <a asp-action="Index" class="btn btn-default"><i class="fa fa-chevron-left"></i>&nbsp;Back to List</a>
+            <input type="submit" value="Create" class="btn btn-success" />
+        </div>
+    </div>
+</form>

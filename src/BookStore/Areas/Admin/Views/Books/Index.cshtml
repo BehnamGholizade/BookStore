@@ -1,0 +1,162 @@
+@{
+    ViewData["Title"] = "Books";
+}
+
+<h2>Books</h2>
+@(Html.Kendo().Window()
+            .Name("modal")
+            .Modal(true)
+            .Visible(false)
+            .Draggable(true)
+            .AutoFocus(true)
+            .MinWidth(300)
+            .MinHeight(100)
+)
+
+@(Html.Kendo().Grid<BookViewModel>()
+                .Name("bookGrid")
+                .Columns(columns =>
+                {
+                    columns.Bound(b => b.Id).HeaderHtmlAttributes(new { @class = "text-center" })
+                    .HtmlAttributes(new { @class = "text-right" })
+                    .Width(50);
+                    columns.Bound(x => x.Isbn)
+                    .HeaderHtmlAttributes(new { @class = "text-center" })
+                    .HtmlAttributes(new { @class = "text-right" }); ;
+                    columns.Bound(x => x.FullTitle).Title("Title").ClientTemplate(
+                        "<a class='productUrl' href='" + Url.Action("Edit", "Books", new { area = "Admin" })
+                    + "/${Id}'><small>${UpTitle}</small><br/>${Title}<br/><small>${SubTitle}</small></a>");
+                    columns.Bound(x => x.ImgCoverUrl).Title("Cover").ClientTemplate(
+                    "<a class='productUrl' href='" + Url.Action("Edit", "Books", new { area = "Admin" })
+                    + "/${Id}'><img src='${ImgCoverUrl}' alt='${FullTitle}' height='69' width='55'/></a>")
+                    .HeaderHtmlAttributes(new { @class = "text-center" })
+                    .HtmlAttributes(new { @class = "text-center" })
+                    .Filterable(false)
+                    .Sortable(false)
+                    .Width(75);
+                    columns.Bound(x => x.PublicationDate).Format("{0:MMM yyyy}")
+                    .HeaderHtmlAttributes(new { @class = "text-center" })
+                    .HtmlAttributes(new { @class = "text-center" }); ;
+                    //columns.Bound(x => x.Publisher.Name).Title("Publisher");
+                    columns.Bound(x => x.EbookPrice).Title("ePrice").Format("{0:c}")
+                        .HeaderHtmlAttributes(new { @class = "text-center" })
+                        .HtmlAttributes(new { @class = "text-right" });
+                    columns.Bound(x => x.PrintPrice).Title("Price").Format("{0:c}")
+                    .HeaderHtmlAttributes(new { @class = "text-center" })
+                    .HtmlAttributes(new { @class = "text-right" });
+                    columns.Command(c =>
+                    {
+                        c.Custom("Change").Click("changeCmd");
+                        c.Custom("Delete").Click("showConfirmation");
+                    }).HeaderHtmlAttributes(new { @class = "text-center" })
+                    .HtmlAttributes(new { @class = "text-center" }).Width(200)
+                    .Title("Command");
+                })
+        .ToolBar(t => t.Custom().Text("Create").HtmlAttributes(new { id = "createCmd" }))
+    .Editable(e => e.DisplayDeleteConfirmation(false)) //suppress standard dialog
+    .Scrollable(src => src.Height(800))
+    .Sortable()
+    .Filterable()
+    .Pageable(pageable => pageable.Refresh(true).PageSizes(true))
+    .DataSource(dataSource => dataSource
+      .Ajax()
+      .Events(events => events.Error("errorHandler"))
+        .Model(m =>
+        {
+            m.Id(t => t.Id);
+            m.Field(t => t.Id).Editable(false);
+        })
+      .Read(r => r.Action("Read", "Books", new { area = "" }))
+      .Destroy(d => d.Action("Destroy", "Books", new { area = "Admin" }))
+      .PageSize(20)
+    )
+)
+
+@* Delete confirmation window template *@
+<script type="text/x-kendo-template" id="confirmationTmpl">
+    <div class="text-center">
+        <p>Delete<br /><strong>${FullTitle}</strong><br />book?</p>
+        <button class="btn btn-warning" id="yesButton">Yes</button>
+        <button class="btn btn-default" id="noButton">No</button>
+    </div>
+</script>
+
+@* Alert window template *@
+<script type="text/x-kendo-template" id="alertTmpl">
+    <div class="text-center">
+        <p>${message}</p>
+        <button class="btn btn-default" id="okButton">OK</button>
+    </div>
+</script>
+
+<script type="text/javascript">
+    $(function () {
+        $("#createCmd").click(function (e) {
+            e.preventDefault();
+            var url = "@Url.Action("Create", "Books", new { area = "Admin" })";
+            window.location.href = url;
+        });
+    });
+
+    function changeCmd(e) {
+        e.preventDefault();
+        //get event row data
+        var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+        var url = "@Url.Action("Edit", "Books", new { area = "Admin" })" + "/" + dataItem.Id;
+        window.location.href = url;
+    };
+
+    //Delete confirmation window
+    function showConfirmation(e) {
+        e.preventDefault();
+        var grid = this;
+        //get event row data
+        var row = $(e.currentTarget).closest("tr");
+        var dataItem = grid.dataItem(row);
+        var wnd = $("#modal").data("kendoWindow");
+        var confirmationTmpl = kendo.template($("#confirmationTmpl").html());
+
+        //set window title
+        $("#modal").prev().find(".k-window-title").html("<small>Delete confirmation<\small>");
+        wnd.content(confirmationTmpl(dataItem));
+        wnd.center().open();
+
+        $("#yesButton").click(function () {
+            grid.removeRow(row);
+            wnd.close();
+        })
+
+        $("#noButton").click(function () {
+            wnd.close();
+        })
+    }
+
+    //Error handler with alert window
+    function errorHandler(e) {
+        if (e.errors) {
+            var grid = this;
+            var message = "";
+            var wnd = $("#modal").data("kendoWindow");
+            var alertTmpl = kendo.template($("#alertTmpl").html());
+
+            // Create a message containing all errors.
+            $.each(e.errors, function (key, value) {
+                if ('errors' in value) {
+                    $.each(value.errors, function () {
+                        message += this + "\n";
+                    });
+                }
+            });
+
+            //set window title
+            $("#modal").prev().find(".k-window-title").html("<small>Error<\small>");
+            wnd.content(alertTmpl({ message: message }));
+            wnd.center().open();
+            grid.cancelChanges();
+
+            $("#okButton").click(function () {
+                wnd.close();
+            })
+        }
+    }
+</script>

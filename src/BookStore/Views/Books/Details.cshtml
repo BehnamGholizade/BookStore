@@ -1,0 +1,146 @@
+@model BookStore.Models.Book
+
+@{
+    ViewData["Title"] = "Book Detail";
+}
+<div id="bookDetailView" class="panel">
+    <div class="panel-body">
+        <div class="media">
+            <h5 class="media-heading">@Model.UpTitle</h5>
+            <h3 class="media-heading">@Model.Title</h3>
+            <h5 class="media-heading">@Model.SubTitle</h5>
+            <div class="media-body">
+                <p>
+                    By
+                    @foreach (var ba in @Model.BookAuthors)
+                    {
+                        <a class="productUrl" href="/Books/BooksByAuthorId/@ba.AuthorId"
+                           title="Books by @ba.Author.FullName">
+                            <span class="label label-primary">
+                                @ba.Author.FullName
+                            </span><i>&nbsp;</i>
+                        </a>
+                    }
+                </p>
+                <p>@Model.ShortDesc</p>
+                <ul class="list-unstyled text-muted">
+                    <li>ISBN: <strong>@Model.Isbn</strong></li>
+                    <li>Pages: <strong>@Model.Pages</strong></li>
+                    <li>
+                        Publisher:
+                        <a class="productUrl" href="@Url.Action("BooksByPublisherId", "Books")/@Model.PublisherId"
+                           title="Books by @Model.Publisher.Name">
+                            <span class="label label-primary">@Model.Publisher.Name</span>
+                        </a>
+                    </li>
+                    <li>PublicationDate: <strong>@Model.PublicationDate.Value.ToString("MMM yyyy")</strong></li>
+                    <li>
+                        Tags:
+                        @foreach (var bt in @Model.BookTags)
+                        {
+                            <span class="label label-primary">
+                                @bt.Tag.Name
+                            </span><i>&nbsp;</i>
+                        }
+                    </li>
+                </ul>
+                <br />
+                <div class="col-md-6 price_block">
+                    <table class="table table-condensed table-striped">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <i class="fa fa-file-pdf-o"></i> eBook:
+                                </td>
+                                <td><span class="color-price">@Model.EbookPrice.ToString("C")</span></td>
+                                <td>
+                                    <form>
+                                        <input name="bookId" type="hidden" value=@Model.Id />
+                                        <input name="bookTypeId" type="hidden" value="1" />
+                                        <input type="button" class="btn btn-success btn-xs submit-btn" value="Buy" />
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <i class="fa fa-book"></i> Print Book:
+                                </td>
+                                <td>
+                                    <span class="color-price">@Model.EbookPrice.ToString("C")</span>
+                                </td>
+                                <td>
+                                    <form>
+                                        <input name="bookId" type="hidden" value=@Model.Id />
+                                        <input name="bookTypeId" type="hidden" value="2" />
+                                        <input type="button" class="btn btn-success btn-xs submit-btn" value="Buy" />
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="media-right media-middle">
+                <img src=@Model.ImgCoverUrl alt=@Model.FullTitle
+                     height="250" width="200"
+                     class="media-object" />
+            </div>
+        </div>
+    </div>
+    <div class="panel-footer">
+        <button class="btn btn-primary" onclick="window.history.go(-1); return false;">
+            <i class="fa fa-chevron-left">&nbsp;</i>Back to catalog
+        </button>
+    </div>
+</div>
+<div id="alsoBoughtDiv">
+    <h3>Customers Who Bought This Item Also Bought</h3>
+    <div>
+        @* Kendo Client Template load *@
+        @await Html.PartialAsync("~/Templates/bookListViewTmpl.cshtml")
+
+        <div class="row">
+            @(Html.Kendo().ListView<IEnumerable<Book>>()
+        .Name("bookListView") //"id" of the widget
+        .TagName("div") //element which wraps all ListView items
+        .ClientTemplateId("bookListViewTmpl") //template for rendering the ListView items
+        .DataSource(dataSource =>
+                    {
+                        dataSource.Ajax()
+                        .PageSize(6)
+                        .Sort(s => s.Add("PublicationDate").Descending())
+                        .Read(read => read.Action("ReadAlsoBought", "Books").Data("getCurrentBookId")
+                        .Type(HttpVerbs.Get) //otherwise POST 404
+                        ).Events(e => e.Change("onChange"));
+                    }).Pageable()
+            )
+        </div>
+    </div>
+</div>
+<script>
+    //should use the on() method, not click()
+    $('#bookDetailView, #bookListView').on("click", "input.submit-btn", function (e) {
+        e.preventDefault();
+        var datastring = $(this).closest('form').serialize();
+        $.ajax({
+            type: "POST",
+            url: "/Cart/AddToCart",
+            data: datastring,
+            success: function (response) {
+                //refresh cartSummary navbar
+                $("#cartSummary").html(response)
+            }
+        });
+    });
+    
+    // hide "Customers Also Bought" div if no records
+    function onChange() {
+        if ($("#bookListView").data("kendoListView").dataSource.total() == 0) {
+            $("#alsoBoughtDiv").hide();
+        };
+    }
+
+    function getCurrentBookId() {
+        return { bookId: @Model.Id }
+    };
+</script>

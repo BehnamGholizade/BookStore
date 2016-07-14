@@ -1,0 +1,214 @@
+﻿@using System.Security.Claims
+@model UserViewModel
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "Checkout";
+}
+
+<div class="panel">
+    <div class="panel-body">
+        <h2>Check out now</h2>
+        <div class="alert alert-success" role="alert">
+            Please enter your details, and we'll ship your goods right away!
+        </div>
+        <h3>Customer</h3>
+        <dl class="dl-horizontal">
+            <dt>
+                <label asp-for="@Model.FirstName">First Name</label>
+            </dt>
+            <dd>
+                @Html.DisplayFor(m => m.FirstName)
+            </dd>
+            <dt>
+                <label asp-for="@Model.LastName">Last Name</label>
+            </dt>
+            <dd>
+                @Html.DisplayFor(m => m.LastName)
+            </dd>
+            <dt>
+                <label asp-for="@Model.PhoneNumber">Phone Number</label>
+            </dt>
+            <dd>
+                @Html.DisplayFor(m => m.PhoneNumber)
+            </dd>
+            <dt>
+                <label asp-for="@Model.Email">Email</label>
+            </dt>
+            <dd>
+                @Html.DisplayFor(m => m.Email)
+            </dd>
+        </dl>
+        <input type="hidden" id="addressId" />
+        <h3>Select a ship to address</h3>
+        @(Html.Kendo().Window()
+            .Name("modal")
+            .Modal(true)
+            .Visible(false)
+            .Draggable(true)
+            .AutoFocus(true)
+            .MinWidth(300)
+            .MinHeight(100)
+        )
+
+        @(Html.Kendo().Grid<AddressViewModel>()
+    .Name("addressesGrid")
+    .Columns(columns =>
+    {
+        columns.Bound(x => x.Id)
+        .ClientTemplate("<input type='radio' name='Id' value='#= Id #'  />")
+        .Width(100).HeaderHtmlAttributes(new { @class = "text-center" })
+        .HtmlAttributes(new { @class = "text-center" })
+        .Title("Choose");
+        columns.Bound(x => x.AddressLine1).Title("Address Line 1");
+        columns.Bound(x => x.AddressLine2).Title("Address Line 2");
+        columns.Bound(x => x.CityName).Title("City");
+        columns.Bound(x => x.StateCode).Title("State Code");
+        columns.Bound(x => x.ZipCode).Title("Zip");
+        columns.Bound(x => x.CountryName).Title("Country");
+        columns.Command(c =>
+        {
+            c.Edit();
+            c.Custom("Delete").Click("showConfirmation");
+        }).HeaderHtmlAttributes(new { @class = "text-center" })
+        .HtmlAttributes(new { @class = "text-center" })
+        .Title("Commands").Width(210);
+    })
+    .ToolBar(t => t.Create())
+    .Editable(e => e.Mode(GridEditMode.PopUp).TemplateName("AddressPopupEditor"))
+    .Editable(e => e.DisplayDeleteConfirmation(false)) //suppress standard dialog
+    .Sortable()
+    .DataSource(dataSource => dataSource
+        .Ajax()
+        .Events(events =>
+        {
+            events.Error("errorHandler")
+            .Sync("syncHandler"); //refresh grid
+        })
+        .Model(m =>
+        {
+            m.Id(x => x.Id);
+            m.Field(x => x.UserId).DefaultValue(@UserManager.GetUserId(User));
+        })
+        .Create(c => c.Action("Create", "Addresses"))
+        .Read(r => r.Action("ReadAddressesByUserId", "Addresses").Data("getUserId"))
+        .Update(u => u.Action("Update", "Addresses"))
+        .Destroy(d => d.Action("Destroy", "Addresses"))
+    )
+    .Events(e =>
+    {
+        e.DataBound("onDataBound");
+    })
+    .Selectable(selectable => selectable.Enabled(true)
+    .Mode(GridSelectionMode.Single).Type(GridSelectionType.Row)))
+    </div>
+    <div class="panel-footer text-center">
+        <button id ="confirmButton" class="btn btn-success">Confirm</button>
+    </div>
+</div>
+@* Delete confirmation window template *@
+<script type="text/x-kendo-template" id="confirmationTmpl">
+    <div class="text-center">
+        <p>Delete address?</p>
+        <button class="btn btn-warning" id="yesButton">Yes</button>
+        <button class="btn btn-default" id="noButton">No</button>
+    </div>
+</script>
+
+@* load Kendo Alert Window Template & script *@
+@await Html.PartialAsync("~/Templates/alertWindowTmpl.cshtml")
+
+<script type="text/javascript">
+    //refresh grid
+    function syncHandler(e) {
+        this.read();
+    }
+
+    //input type='radio' for addressId handler
+    function onDataBound() {
+        var grid = this;
+        $("[name='Id']").change(function (e) {
+            var row = $(e.target).closest("tr");
+            var dataItem = grid.dataItem(row);
+            grid.select(row);
+            $("#addressId").val(dataItem.Id);
+        });
+    }
+    //get current user Id
+    function getUserId() {
+        return {
+            userId: "@UserManager.GetUserId(User)"
+        };
+    }
+
+    //Confirm button handler
+    $('#confirmButton').click(function () {
+        if (!"@UserManager.GetUserId(User)"){
+            showAlert("Error", "Please Login or Register first");
+            return;
+        }
+
+        if (!$("#addressId").val()) {
+            showAlert("Error", "Please select or create address first");
+            return;
+        }
+            $.ajax({
+                type: "POST",
+                url: "/Cart/CreateOrder",
+                data: { addressId : $("#addressId").val() },
+                success: function (response) {
+                    showAlert("Success", "Created order <strong>"
+                        + response.Number
+                        + "</strong>.<br/><br/>You can track all orders<br/>in your profile.");
+                },
+                error: function (xhr, status, error) {
+                    showAlert("Error", xhr.responseText);
+                }
+            });
+        return false;
+        });
+
+    //Delete confirmation window
+    function showConfirmation(e) {
+        e.preventDefault();
+
+        var grid = this;
+        var row = $(e.currentTarget).closest("tr");
+        var dataItem = this.dataItem(row);
+        var wnd = $("#modal").data("kendoWindow");
+        var confirmationTmpl = kendo.template($("#confirmationTmpl").html());
+
+        //set window title
+        $("#modal").prev().find(".k-window-title").html("<small>Delete confirmation<\small>");
+        wnd.content(confirmationTmpl(dataItem));
+        wnd.center().open();
+
+        $("#yesButton").click(function () {
+            grid.removeRow(row);
+            wnd.close();
+        })
+
+        $("#noButton").click(function () {
+            wnd.close();
+        })
+    }
+
+    //Error handler with alert window
+    function errorHandler(e) {
+        if (e.errors) {
+            var grid = this;
+            var message = "";
+
+            // Create a message containing all errors.
+            $.each(e.errors, function (key, value) {
+                if ('errors' in value) {
+                    $.each(value.errors, function () {
+                        message += this + "\n";
+                    });
+                }
+            });
+            showAlert("Error", message);
+            grid.cancelChanges();
+        }
+    }
+</script>

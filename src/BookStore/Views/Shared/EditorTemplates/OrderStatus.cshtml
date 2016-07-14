@@ -1,0 +1,10 @@
+﻿@model BookStore.Models.Order
+
+@(Html.Kendo().DropDownListFor(m => m) // !Important for binding!
+            .DataValueField("Id") // The value of the dropdown
+            .DataTextField("Name") // The text of the items
+            .AutoBind(true)
+            //.Events(ev => ev.DataBound("function(){this.trigger('change')}"))
+            .BindTo((System.Collections.IEnumerable)ViewData["orderStatuses"]) // A list of all order statuses which is populated in the controller
+)
+@Html.ValidationMessageFor(m => m)

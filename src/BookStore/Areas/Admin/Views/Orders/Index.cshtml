@@ -1,0 +1,139 @@
+﻿@model IEnumerable<OrderViewModel>
+
+@{
+    ViewData["Title"] = "Orders";
+}
+
+<h2>Orders</h2>
+@(Html.Kendo().Window()
+    .Name("modal")
+    .Modal(true)
+    .Visible(false)
+    .Draggable(true)
+    .AutoFocus(true)
+    .MinWidth(300)
+    .MinHeight(100)
+)
+
+@(Html.Kendo().Grid<OrderViewModel>()
+        .Name("ordersGrid")
+        .Columns(columns =>
+        {
+            columns.Bound(x => x.Id).HeaderHtmlAttributes(new { @class = "text-center" })
+            .HtmlAttributes(new { @class = "text-right" })
+            .Width(70);
+            columns.Bound(x => x.CreationDate)
+            .Format("{0:dd.MM.yyyy HH:mm}")
+            //.Format("{0:" + System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.SortableDateTimePattern + "}")
+            .HeaderHtmlAttributes(new { @class = "text-center" })
+            .HtmlAttributes(new { @class = "text-center" })
+            .Title("Date");
+            columns.Bound(x => x.Number)
+            .HeaderHtmlAttributes(new { @class = "text-center" })
+            .HtmlAttributes(new { @class = "text-center" });
+            columns.ForeignKey(x => x.StatusId, (System.Collections.IEnumerable)ViewData["orderStatuses"], "Id", "Name")
+                .HeaderHtmlAttributes(new { @class = "text-center" })
+                .HtmlAttributes(new { @class = "text-center" })
+                .Title("Status");
+            columns.Bound(x => x.TotalSum).Format("{0:c}")
+            .HeaderHtmlAttributes(new { @class = "text-center" })
+            .HtmlAttributes(new { @class = "text-right" })
+            .Title("Sum");
+            columns.Command(c =>
+            {
+                c.Edit().Text("Change status");
+            }).HeaderHtmlAttributes(new { @class = "text-center" })
+            .HtmlAttributes(new { @class = "text-center" })
+            .Title("Commands").Width(210);
+        })
+    .Editable(e => e.Mode(GridEditMode.InLine))
+    .Scrollable(src => src.Height(800))
+    .Sortable()
+    .Filterable()
+    .Pageable(pageable => pageable.Refresh(true).PageSizes(true))
+    .DataSource(dataSource => dataSource
+    .Ajax()
+    .Events(events => events.Error("errorHandler"))
+    .Model(m =>
+    {
+        m.Id(t => t.Id);
+        m.Field(t => t.Id).Editable(false);
+        m.Field(t => t.CreationDate).Editable(false);
+        m.Field(t => t.Number).Editable(false);
+        m.Field(t => t.TotalSum).Editable(false);
+    })
+    .Read(r => r.Action("Read", "Orders", new { area = "Admin" }))
+    .Update(u => u.Action("Update", "Orders", new { area = "Admin" }).Data("convertDate"))
+    .PageSize(20)
+    .Sort(s => s.Add(x => x.CreationDate).Descending())
+    )
+    .ClientDetailTemplateId("orderLinesTmpl")
+)
+
+@* Order Lines Template *@
+<script type="text/x-kendo-template" id="orderLinesTmpl">
+    @(Html.Kendo().Grid<OrderLineViewModel>()
+    .Name("order#=Id#")
+    .Columns(columns =>
+    {
+        columns.Bound(o => o.Book.FullTitle).Title("Title");
+        columns.Bound(o => o.BookType.Name).Title("Type");
+        columns.Bound(o => o.Price);
+        columns.Bound(o => o.Quantity);
+    })
+    .DataSource(dataSource =>
+        dataSource
+        .Ajax()
+        .PageSize(10)
+        .Read(read =>
+        read.Action("ReadLines", "Orders", new { area = "Admin", orderId = "#=Id#" })))
+        .Sortable()
+        .ToClientTemplate())
+</script>
+
+@* Convert CreationDate for server *@
+@* The "s" specifier renders universal sortable local date/time pattern *@
+<script>
+    function convertDate(data) {
+        data["CreationDate"] = data ? kendo.toString(data.CreationDate, "s") : "";
+    }
+</script>
+
+@* Alert window template *@
+<script type="text/x-kendo-template" id="alertTmpl">
+    <div class="text-center">
+        <p>${message}</p>
+        <button class="btn btn-default" id="okButton">OK</button>
+    </div>
+</script>
+
+<script type="text/javascript">
+    //Error handler with alert window
+    function errorHandler(e) {
+        if (e.errors) {
+            var grid = this;
+            var message = "";
+            var wnd = $("#modal").data("kendoWindow");
+            var alertTmpl = kendo.template($("#alertTmpl").html());
+
+            // Create a message containing all errors.
+            $.each(e.errors, function (key, value) {
+                if ('errors' in value) {
+                    $.each(value.errors, function () {
+                        message += this + "\n";
+                    });
+                }
+            });
+
+            //set window title
+            $("#modal").prev().find(".k-window-title").html("<small>Error<\small>");
+            wnd.content(alertTmpl({ message: message }));
+            wnd.center().open();
+            grid.cancelChanges();
+
+            $("#okButton").click(function () {
+                wnd.close();
+            })
+        }
+    }
+</script>

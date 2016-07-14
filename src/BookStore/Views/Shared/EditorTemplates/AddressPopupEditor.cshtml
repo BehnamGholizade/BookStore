@@ -1,0 +1,120 @@
+﻿@inject UserManager<ApplicationUser> UserManager
+@model BookStore.ViewModels.AddressViewModel
+
+<script type="text/javascript">
+    function filterStates() { return { countryId: $("#CountryId").val() }; }
+    function filterCities() { return { stateId: $("#StateId").val() }; }
+    function filterZips() { return { cityId: $("#CityId").val() }; }
+</script>
+
+<div class="k-window-content">
+    <fieldset>
+        @Html.HiddenFor(model => model.Id)
+        @Html.HiddenFor(model => model.UserId, new { @Value = "@UserManager.GetUserId(User)" })
+
+        <div class="editor-label">
+            <label for="CountryId">Countries</label>
+        </div>
+        <div class="editor-field">
+            @(Html.Kendo().DropDownListFor(m => m.CountryId)
+    .OptionLabel("Select country...")
+    .DataTextField("Name")
+    .DataValueField("Id")
+    .HtmlAttributes(new { required = "required", data_required_msg = "Country is required" })
+    .DataSource(source =>
+    {
+        source.Read(read =>
+        {
+            read.Action("ReadCountries", "Addresses");
+        });
+    })
+            )
+        </div>
+
+        <div class="editor-label">
+            <label for="StateId">States</label>
+        </div>
+        <div class="editor-field">
+            @(Html.Kendo().DropDownListFor(m => m.StateId)
+    .OptionLabel("Select state...")
+    .DataTextField("Name")
+    .DataValueField("Id")
+    .HtmlAttributes(new { required = "required", data_required_msg = "State is required" })
+    .DataSource(source =>
+    {
+        source.Read(read =>
+        {
+            read.Action("ReadStatesByCountryId", "Addresses")
+            .Data("filterStates"); //move all Data filters to "main" file
+        })
+        .ServerFiltering(true);
+    })
+    .Enable(false)
+    .AutoBind(true)
+    .CascadeFrom("CountryId"))
+        </div>
+
+        <div class="editor-label">
+            <label for="CityId">Cities</label>
+        </div>
+        <div class="editor-field">
+            @(Html.Kendo().DropDownListFor(m => m.CityId)
+    .OptionLabel("Select city...")
+    .DataTextField("Name")
+    .DataValueField("Id")
+    .HtmlAttributes(new { required = "required", data_required_msg = "City is required" })
+    .DataSource(source =>
+    {
+        source.Read(read =>
+        {
+            read.Action("ReadCitiesByStateId", "Addresses")
+            .Data("filterCities");
+        })
+        .ServerFiltering(true);
+    })
+    .Enable(false)
+    .AutoBind(false)
+    .CascadeFrom("StateId"))
+        </div>
+
+        <div class="editor-label">
+            <label for="ZipId">Zips</label>
+        </div>
+        <div class="editor-field">
+            @(Html.Kendo().DropDownListFor(m => m.ZipId)
+    .OptionLabel("Select zip...")
+    .DataTextField("Code")
+    .DataValueField("Id")
+    .HtmlAttributes(new { required = "required", data_required_msg = "Zip is required" })
+    .DataSource(source =>
+    {
+        source.Read(read =>
+        {
+            read.Action("ReadZipsByCityId", "Addresses")
+            .Data("filterZips");
+        })
+        .ServerFiltering(true);
+    })
+    .Enable(false)
+    .AutoBind(false)
+    .CascadeFrom("CityId"))
+        </div>
+
+        <div class="editor-label">
+            <label for="AddressLine1">Address Line 1</label>
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.AddressLine1,
+            new { htmlAttributes = new { @style = "width:100%" } })
+            @Html.ValidationMessageFor(model => model.AddressLine1)
+        </div>
+
+        <div class="editor-label">
+            <label for="AddressLine2">Address Line 2</label>
+        </div>
+        <div class="editor-field">
+            @Html.EditorFor(model => model.AddressLine2,
+            new { htmlAttributes = new { @style = "width:100%" } })
+        </div>
+    </fieldset>
+</div>

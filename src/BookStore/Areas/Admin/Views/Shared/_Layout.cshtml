@@ -1,0 +1,131 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin Area</title>
+    <environment names="Development">
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+        <link href="~/lib/kendo-ui/styles/kendo.common-bootstrap.min.css" rel="stylesheet" />
+        <link href="~/lib/kendo-ui/styles/kendo.bootstrap.min.css" rel="stylesheet" />
+        <link href="~/lib/bootswatch/spacelab/bootstrap.css" rel="stylesheet" />
+        <link href="~/lib/bootswatch/spacelab/bootstrap.css" rel="stylesheet" />
+        <link href="~/lib/Font-Awesome/css/font-awesome.min.css" rel="stylesheet" />
+        <link rel="stylesheet" href="~/css/site.css" />
+    </environment>
+    <environment names="Staging,Production">
+        <link rel="stylesheet" href="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.6/css/bootstrap.min.css"
+              asp-fallback-href="~/lib/bootstrap/dist/css/bootstrap.min.css"
+              asp-fallback-test-class="sr-only" asp-fallback-test-property="position" asp-fallback-test-value="absolute" />
+        <link rel="stylesheet"
+              href="https://kendo.cdn.telerik.com/2016.2.504/styles/kendo.common-bootstrap.min.css"
+              asp-fallback-href="~/lib/kendo-ui/styles/kendo.common-bootstrap.min.css"
+              asp-fallback-test-class="k-common-test-class"
+              asp-fallback-test-property="opacity" asp-fallback-test-value="0" />
+        <link rel="stylesheet"
+              href="https://kendo.cdn.telerik.com/2016.2.504/styles/kendo.bootstrap.min.css"
+              asp-fallback-href="~/lib/kendo-ui/styles/kendo.bootstrap.min.css"
+              asp-fallback-test-class="k-theme-test-class"
+              asp-fallback-test-property="opacity" asp-fallback-test-value="0" />
+        <link rel="stylesheet"
+              href=https://maxcdn.bootstrapcdn.com/bootswatch/3.3.6/spacelab/bootstrap.min.css
+              asp-fallback-href="~/lib/bootswatch/spacelab/bootstrap.min.css"
+              asp-fallback-test-class="k-theme-test-class"
+              asp-fallback-test-property="opacity" asp-fallback-test-value="0" />
+        <link rel="stylesheet"
+              href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css"
+              asp-fallback-href="~/lib/Font-Awesome/css/font-awesome.min.css" />
+        <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
+    </environment>
+    <environment names="Development">
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+        <script src="~/lib/jquery-ajax-unobtrusive/jquery.unobtrusive-ajax.min.js"></script>
+        <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="~/lib/kendo-ui/js/kendo.all.min.js"></script>
+        <script src="~/lib/kendo-ui/js/kendo.aspnetmvc.min.js"></script>
+        @*<script src="~/lib/kendo-ui/js/cultures/kendo.culture.ru-RU.min.js"></script>*@
+        <script src="~/js/site.js" asp-append-version="true"></script>
+    </environment>
+    <environment names="Staging,Production">
+        <script src="https://ajax.aspnetcdn.com/ajax/jquery/jquery-2.1.4.min.js"
+                asp-fallback-src="~/lib/jquery/dist/jquery.min.js"
+                asp-fallback-test="window.jQuery">
+        </script>
+        <script src="http://ajax.aspnetcdn.com/ajax/jquery.validate/1.15.0/jquery.validate.min.js"
+                asp-fallback-src="~/lib/jquery-validation/dist/jquery.validate.min.js">
+        </script>
+        <script src="https://cdn.jsdelivr.net/jquery.ajax.unobtrusive/3.2.4/jquery.unobtrusive-ajax.min.js"
+                asp-fallback-src="~/lib/jquery-ajax-unobtrusive/jquery.unobtrusive-ajax.min.js">
+        </script>
+        <script src="https://cdn.jsdelivr.net/jquery.validation.unobtrusive/3.2.6/jquery.validate.unobtrusive.min.js"
+                asp-fallback-src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js">
+        </script>
+        <script src="https://ajax.aspnetcdn.com/ajax/bootstrap/3.3.6/bootstrap.min.js"
+                asp-fallback-src="~/lib/bootstrap/dist/js/bootstrap.min.js"
+                asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.modal">
+        </script>
+        <script src="https://kendo.cdn.telerik.com/2016.2.504/js/kendo.all.min.js"
+                asp-fallback-src="~/lib/kendo-ui/js/kendo.all.min.js"
+                asp-fallback-test="window.kendo">
+        </script>
+        <script src="https://kendo.cdn.telerik.com/2016.2.504/js/kendo.aspnetmvc.min.js"
+                asp-fallback-src="~/lib/kendo-ui/js/kendo.aspnetmvc.min.js"
+                asp-fallback-test="kendo.data.transports['aspnetmvc-ajax']">
+        </script>
+        @*<script src="https://kendo.cdn.telerik.com/2016.2.504/js/cultures/kendo.culture.ru-RU.min.js"
+                    asp-fallback-src="~/lib/kendo-ui/js/cultures/kendo.culture.ru-RU.min.js"
+                    asp-fallback-test="kendo.data.transports['culture-ajax']">
+            </script>*@
+        <script src="~/js/site.min.js" asp-append-version="true"></script>
+    </environment>
+</head>
+<body>
+    @*<script type="text/javascript">
+        //set the Kendo UI culture
+        kendo.culture("ru-RU");
+    </script>*@
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a asp-controller="Home" asp-action="Index" class="navbar-brand">BookStore</a>
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li><a asp-route-area="Admin" asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li><a asp-route-area="Admin" asp-controller="Orders" asp-action="Index">Orders</a></li>
+                    <li><a asp-route-area="Admin" asp-controller="Customers" asp-action="Index">Customers</a></li>
+                    <li><a asp-route-area="Admin" asp-controller="Books" asp-action="Index">Books</a></li>
+                    <li><a asp-route-area="Admin" asp-controller="Authors" asp-action="Index">Authors</a></li>
+                    <li><a asp-route-area="Admin" asp-controller="Publishers" asp-action="Index">Publishers</a></li>
+                    <li><a asp-route-area="Admin" asp-controller="Tags" asp-action="Index">Tags</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a asp-route-area="" asp-controller="Home" asp-action="Index" target="_blank">Site</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <p>&copy; @DateTime.Now.Year - BookStore</p>
+        </footer>
+    </div>
+    @RenderSection("scripts", required: false)
+    <script>
+        //select active navbar menu item
+        $(document).ready(function () {
+            $('a[href="' + this.location.pathname + '"]').parent().addClass('active');
+        });
+    </script>
+</body>
+</html>

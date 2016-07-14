@@ -1,0 +1,8 @@
+﻿@model BookStore.ViewModels.CartSummaryViewModel
+
+<div id="cartSummary">
+    <a asp-controller="Cart" asp-action="Index" class="btn btn-success navbar-btn">
+        <i class="fa fa-shopping-cart" style="font-size: 1.3em;"></i>&nbsp;
+        <span class="badge">@Model.Total</span>&nbsp;@Model.Sum
+    </a>
+</div>

@@ -1,0 +1,21 @@
+﻿@* Alert window template *@
+<script type="text/x-kendo-template" id="alertTmpl">
+    <div class="text-center">
+        <p>#=message#</p><br />
+        <button class="btn btn-default" id="okButton">OK</button>
+    </div>
+</script>
+<script type="text/javascript">
+    //show kendo alert window with message
+    function showAlert(title, message) {
+        var wnd = $("#modal").data("kendoWindow");
+        var alertTmpl = kendo.template($("#alertTmpl").html());
+        //set window title
+        $("#modal").prev().find(".k-window-title").html("<small>" + title + "<\small>");
+        wnd.content(alertTmpl({ message: message }));
+        wnd.center().open();
+        $("#okButton").click(function () {
+            wnd.close();
+        })
+    }
+</script>

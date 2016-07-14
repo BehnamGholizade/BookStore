@@ -1,0 +1,124 @@
+﻿@{
+    ViewData["Title"] = "Addresses";
+}
+<div>
+<h4>Countries:</h4>
+@(Html.Kendo().DropDownList()
+              .Name("CountryId")
+              .HtmlAttributes(new { style = "width:100%" })
+              .OptionLabel("Select country...")
+              .DataTextField("Name")
+              .DataValueField("Id")
+              .DataSource(source =>
+              {
+                  source.Read(read =>
+                  {
+                      read.Action("ReadCountries", "Addresses");
+                  });
+              })
+)
+
+<h4>States:</h4>
+@(Html.Kendo().DropDownList()
+                      .Name("StateId")
+                      .HtmlAttributes(new { style = "width:100%" })
+                      .OptionLabel("Select state...")
+                      .DataTextField("Name")
+                      .DataValueField("Id")
+                      .DataSource(source =>
+                      {
+                          source.Read(read =>
+                          {
+                              read.Action("ReadStatesByCountryId", "Addresses")
+                                  .Data("filterStates");
+                          })
+                          .ServerFiltering(true);
+                      })
+                      .Enable(false)
+                      .AutoBind(true)
+                      .CascadeFrom("CountryId")
+)
+<script>
+    function filterStates() {
+        return {
+            countryId: $("#CountryId").val()
+        };
+    }
+</script>
+
+<h4>Cities:</h4>
+@(Html.Kendo().DropDownList()
+                      .Name("CityId")
+                      .HtmlAttributes(new { style = "width:100%" })
+                      .OptionLabel("Select city...")
+                      .DataTextField("Name")
+                      .DataValueField("Id")
+                      .DataSource(source =>
+                      {
+                          source.Read(read =>
+                          {
+                              read.Action("ReadCitiesByStateId", "Addresses")
+                                  .Data("filterCities");
+                          })
+                          .ServerFiltering(true);
+                      })
+                      .Enable(false)
+                      .AutoBind(false)
+                      .CascadeFrom("StateId")
+)
+<script>
+    function filterCities() {
+        return {
+            stateId: $("#StateId").val()
+        };
+    }
+</script>
+
+<h4>Zips:</h4>
+@(Html.Kendo().DropDownList()
+                      .Name("ZipId")
+                      .HtmlAttributes(new { style = "width:100%" })
+                      .OptionLabel("Select zip code...")
+                      .DataTextField("Code")
+                      .DataValueField("Id")
+                      .DataSource(source =>
+                      {
+                          source.Read(read =>
+                          {
+                              read.Action("ReadZipsByCityId", "Addresses")
+                                  .Data("filterZips");
+                          })
+                          .ServerFiltering(true);
+                      })
+                      .Enable(false)
+                      .AutoBind(false)
+                      .CascadeFrom("CityId")
+)
+<script>
+    function filterZips() {
+        return {
+            cityId: $("#CityId").val()
+        };
+    }
+</script>
+
+    <button class="k-button k-primary" id="get" style="margin-top: 2em; float: right;">View Result</button>
+</div>
+
+<script>
+    $(document).ready(function () {
+        var countries = $("#countries").data("kendoDropDownList"),
+            states = $("#states").data("kendoDropDownList"),
+            cities = $("#cities").data("kendoDropDownList");
+            zips = $("#zips").data("kendoDropDownList");
+
+        $("#get").click(function () {
+            var countryInfo = "\nCountry: { id: " + countries.value() + ", name: " + countries.text() + " }",
+                stateInfo = "\nState: { id: " + states.value() + ", name: " + states.text() + " }",
+                cityInfo = "\nCity: { id: " + cities.value() + ", name: " + cities.text() + " }",
+                zipInfo = "\nZip: { id: " + zips.value() + ", name: " + zips.text() + " }";
+
+            alert("Details:\n" + countryInfo + stateInfo + cityInfo + zipInfo);
+        });
+    });
+</script>

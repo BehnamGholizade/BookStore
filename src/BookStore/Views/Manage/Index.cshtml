@@ -1,0 +1,292 @@
+﻿@model IndexViewModel
+@inject UserManager<ApplicationUser> UserManager
+@{
+    ViewData["Title"] = "Manage your account";
+}
+
+<h2>@ViewData["Title"].</h2>
+<p class="text-success">@ViewData["StatusMessage"]</p>
+<!-- Nav tabs -->
+<ul class="nav nav-tabs" role="tablist">
+    <li role="presentation" class="active">
+        <a href="#account" aria-controls="account" role="tab" data-toggle="tab">
+            Account
+        </a>
+    </li>
+    <li role="presentation">
+        <a href="#orders" aria-controls="orders" role="tab" data-toggle="tab">
+            Orders
+        </a>
+    </li>
+    <li role="presentation">
+        <a href="#addresses" aria-controls="addresses" role="tab" data-toggle="tab">
+            Addresses
+        </a>
+    </li>
+</ul>
+<!-- Tab panes -->
+<div class="tab-content">
+    <div role="tabpanel" class="tab-pane fade in active" id="account">
+        <h4>Change your account settings</h4>
+        <hr />
+        <dl class="dl-horizontal">
+            <dt>Password:</dt>
+            <dd>
+                @if (Model.HasPassword)
+            {
+                    <a asp-controller="Manage" asp-action="ChangePassword">[ Change ]</a>
+                }
+                else
+                {
+                    <a asp-controller="Manage" asp-action="SetPassword">[ Create ]</a>
+                }
+            </dd>
+            <dt>External Logins:</dt>
+            <dd>
+
+                @Model.Logins.Count <a asp-controller="Manage" asp-action="ManageLogins">[ Manage ]</a>
+            </dd>
+            <dt>Phone Number:</dt>
+            <dd>
+                <p>
+                    Phone Numbers can used as a second factor of verification in two-factor authentication.
+                    See <a href="http://go.microsoft.com/fwlink/?LinkID=532713">this article</a>
+                    for details on setting up this ASP.NET application to support two-factor authentication using SMS.
+                </p>
+                @*@(Model.PhoneNumber ?? "None")
+                    @if (Model.PhoneNumber != null)
+                    {
+                        <br />
+                        <a asp-controller="Manage" asp-action="AddPhoneNumber" class="btn-bracketed">Change</a>
+                        <form asp-controller="Manage" asp-action="RemovePhoneNumber" method="post">
+                            [<button type="submit" class="btn-link">Remove</button>]
+                        </form>
+                    }
+                    else
+                    {
+                        <a asp-controller="Manage" asp-action="AddPhoneNumber" class="btn-bracketed">Add</a>
+                    }*@
+            </dd>
+
+            <dt>Two-Factor Authentication:</dt>
+            <dd>
+                <p>
+                    There are no two-factor authentication providers configured. See <a href="http://go.microsoft.com/fwlink/?LinkID=532713">this article</a>
+                    for setting up this application to support two-factor authentication.
+                </p>
+                @*@if (Model.TwoFactor)
+                    {
+                        <form asp-controller="Manage" asp-action="DisableTwoFactorAuthentication" method="post" class="form-horizontal">
+                            Enabled <button type="submit" class="btn-link btn-bracketed">Disable</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-controller="Manage" asp-action="EnableTwoFactorAuthentication" method="post" class="form-horizontal">
+                            <button type="submit" class="btn-link btn-bracketed">Enable</button> Disabled
+                        </form>
+                    }*@
+            </dd>
+        </dl>
+    </div>
+    <div role="tabpanel" class="tab-pane fade" id="orders">
+        <h4>Orders</h4>
+        @(Html.Kendo().Window()
+    .Name("modal")
+    .Modal(true)
+    .Visible(false)
+    .Draggable(true)
+    .AutoFocus(true)
+    .MinWidth(300)
+    .MinHeight(100)
+        )
+
+        @(Html.Kendo().Grid<Order>
+        ()
+        .Name("ordersGrid")
+        .Columns(columns =>
+        {
+            columns.Bound(x => x.CreationDate)
+            .Format("{0:dd.MM.yyyy HH:mm}")
+            //.Format("{0:" + System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.SortableDateTimePattern + "}")
+            .HeaderHtmlAttributes(new { @class = "text-center" })
+            .HtmlAttributes(new { @class = "text-center" })
+            .Title("Date");
+            columns.Bound(x => x.Number)
+            .HeaderHtmlAttributes(new { @class = "text-center" })
+            .HtmlAttributes(new { @class = "text-center" });
+            columns.Bound(x => x.Status.Name).HeaderHtmlAttributes(new { @class = "text-center" })
+            .HtmlAttributes(new { @class = "text-center" })
+            .Title("Status");
+            columns.Bound(x => x.TotalQty)
+            .HeaderHtmlAttributes(new { @class = "text-center" })
+            .HtmlAttributes(new { @class = "text-right" })
+            .Title("Total Qty");
+            columns.Bound(x => x.TotalSum).Format("{0:c}")
+            .HeaderHtmlAttributes(new { @class = "text-center" })
+            .HtmlAttributes(new { @class = "text-right" })
+            .Title("Sum");
+        })
+    //.Scrollable(src => src.Height(800))
+    .Sortable()
+    .Filterable()
+    .Pageable(pageable => pageable.Refresh(true).PageSizes(true))
+    .DataSource(dataSource => dataSource
+    .Ajax()
+    .Events(events => events.Error("errorHandler"))
+    .Model(m =>
+    {
+        m.Id(t => t.Id);
+    })
+    .Read(r => r.Action("ReadOrdersByUserId", "Orders", new { area = "Admin" }).Data("getUserId"))
+    .PageSize(20)
+    .Sort(s => s.Add(x => x.CreationDate).Descending())
+    )
+    .ClientDetailTemplateId("orderLinesTmpl")
+        )
+
+        @* Order Lines Template *@
+        <script type="text/x-kendo-template" id="orderLinesTmpl">
+            @(Html.Kendo().Grid<OrderLine>()
+                        .Name("order#=Id#")
+                        .Columns(columns =>
+                        {
+                            columns.Bound(o => o.Book.FullTitle).Title("Title");
+                            columns.Bound(o => o.BookType.Name).Title("Type");
+                            columns.Bound(o => o.Price);
+                            columns.Bound(o => o.Quantity);
+                        })
+                        .DataSource(dataSource => dataSource
+                            .Ajax()
+                            .PageSize(10)
+                            .Read(read => read.Action("ReadLines", "Orders", new { area = "Admin", orderId = "#=Id#" }))
+                        )
+                        .Sortable()
+                        .ToClientTemplate())
+        </script>
+    </div>
+    <div role="tabpanel" class="tab-pane fade" id="addresses">
+        <h4>Add or change addresses</h4>
+        @(Html.Kendo().Grid<AddressViewModel>()
+    .Name("addressesGrid")
+    .Columns(columns =>
+    {
+        columns.Bound(x => x.AddressLine1).Title("Address Line 1");
+        columns.Bound(x => x.AddressLine2).Title("Address Line 2");
+        columns.Bound(x => x.CityName).Title("City");
+        columns.Bound(x => x.StateCode).Title("State Code");
+        columns.Bound(x => x.ZipCode).Title("Zip");
+        columns.Bound(x => x.CountryName).Title("Country");
+        columns.Command(c =>
+        {
+            c.Edit().Text("Change");
+            c.Custom("Delete").Click("showConfirmation");
+        }).HeaderHtmlAttributes(new { @class = "text-center" })
+        .HtmlAttributes(new { @class = "text-center" })
+        .Title("Commands").Width(200);
+    })
+    .ToolBar(t => t.Create())
+    .Editable(e => e.Mode(GridEditMode.PopUp).TemplateName("AddressPopupEditor"))
+    .Editable(e => e.DisplayDeleteConfirmation(false)) //suppress standard dialog
+    .Sortable()
+    .DataSource(dataSource => dataSource
+        .Ajax()
+        .Events(events =>
+        {
+            events.Error("errorHandler")
+            .Sync("syncHandler"); //refresh grid
+        })
+        .Model(m =>
+        {
+            m.Id(x => x.Id);
+            m.Field(x => x.UserId).DefaultValue(@UserManager.GetUserId(User));
+        })
+        .Create(c => c.Action("Create", "Addresses"))
+        .Read(r => r.Action("ReadAddressesByUserId", "Addresses").Data("getUserId"))
+        .Update(u => u.Action("Update", "Addresses"))
+        .Destroy(d => d.Action("Destroy", "Addresses"))
+    ))
+        @* Delete confirmation window template *@
+        <script type="text/x-kendo-template" id="confirmationTmpl">
+            <div class="text-center">
+                <p>Delete address?</p>
+                <button class="btn btn-warning" id="yesButton">Yes</button>
+                <button class="btn btn-default" id="noButton">No</button>
+            </div>
+        </script>
+
+        @* Alert window template *@
+        <script type="text/x-kendo-template" id="alertTmpl">
+            <div class="text-center">
+                <p>#=message#</p><br />
+                <button class="btn btn-default" id="okButton">OK</button>
+            </div>
+        </script>
+
+        <script type="text/javascript">
+            //refresh grid
+            function syncHandler(e) {
+                this.read();
+            }
+            //get current user Id
+            function getUserId() {
+                return {
+                    userId: "@UserManager.GetUserId(User)"
+                };
+            }
+            //Delete confirmation window
+            function showConfirmation(e) {
+                e.preventDefault();
+                var grid = this;
+                var row = $(e.currentTarget).closest("tr");
+                var dataItem = this.dataItem(row);
+                var wnd = $("#modal").data("kendoWindow");
+                var confirmationTmpl = kendo.template($("#confirmationTmpl").html());
+                //set window title
+                $("#modal").prev().find(".k-window-title").html("<small>Delete confirmation<\small>");
+                wnd.content(confirmationTmpl(dataItem));
+                wnd.center().open();
+
+                $("#yesButton").click(function () {
+                    grid.removeRow(row);
+                    wnd.close();
+                })
+
+                $("#noButton").click(function () {
+                    wnd.close();
+                })
+            }
+
+            //show alert window with message
+            function showAlert(title, message) {
+                var wnd = $("#modal").data("kendoWindow");
+                var alertTmpl = kendo.template($("#alertTmpl").html());
+                //set window title
+                $("#modal").prev().find(".k-window-title").html("<small>" + title + "<\small>");
+                wnd.content(alertTmpl({ message: message }));
+                wnd.center().open();
+                $("#okButton").click(function () {
+                    wnd.close();
+                })
+            }
+
+            //Error handler with alert window
+            function errorHandler(e) {
+                if (e.errors) {
+                    var grid = this;
+                    var message = "";
+                    // Create a message containing all errors.
+                    $.each(e.errors, function (key, value) {
+                        if ('errors' in value) {
+                            $.each(value.errors, function () {
+                                message += this + "\n";
+                            });
+                        }
+                    });
+                    showAlert("Error", message);
+                    grid.cancelChanges();
+                }
+            }
+        </script>
+    </div>
+</div>

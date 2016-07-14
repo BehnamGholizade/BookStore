@@ -1,0 +1,38 @@
+﻿@* load Kendo Alert Window Template & script *@
+@await Html.PartialAsync("~/Templates/alertWindowTmpl.cshtml")
+
+<form method="post" enctype="multipart/form-data">
+    <input type="file" id="file" class="form-control"
+           style="margin-bottom:10px;" />
+    <input type="button" class="btn btn-success"
+           id="uploadBtn"
+           value="Upload Cover" />
+</form>
+
+<script type="text/javascript">
+    $(function () {
+        // Upload cover image to wwwroot/images/covers
+        $("#uploadBtn").click(function (e) {
+            e.preventDefault();
+            var files = $("#file").get(0).files;
+            if (files[0]) {
+                var fileData = new FormData();
+                fileData.append(files[0].name, files[0]);
+                $.ajax({
+                    type: "POST",
+                    url: "/Admin/Upload/UploadFileAjax",
+                    contentType: false, // Not to set any content header
+                    processData: false, // Not to process data
+                    data: fileData,
+                    success: function (result) {
+                        $("#ImgCoverUrl").val(result); //set image path
+                        $("#coverImg").attr('src', result); // refresh cover
+                    },
+                    error: function (err) {
+                        showAlert("Error!", "There was error uploading files!<br/>" + err.statusText);
+                    }
+                });
+            }
+        });
+    });
+</script>

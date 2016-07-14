@@ -1,0 +1,39 @@
+﻿@{
+    ViewData["Title"] = "BookStore";
+}
+
+@* Kendo Client Template load *@
+@await Html.PartialAsync("~/Templates/bookListViewTmpl.cshtml")
+
+<div class="row">
+    @(Html.Kendo().ListView<IEnumerable<Book>>()
+        .Name("bookListView") //"id" of the widget
+        .TagName("div") //element which wraps all ListView items
+        .ClientTemplateId("bookListViewTmpl") //template for rendering the ListView items
+        .DataSource(dataSource =>
+                    {
+                        dataSource.Ajax()
+                        .PageSize(48)
+                        .Sort(s => s.Add("PublicationDate").Descending())
+                        .Read(read => read.Action("Read", "Books")
+                        .Type(HttpVerbs.Get) //otherwise POST 404
+                        );
+                    }).Pageable()
+    )
+</div>
+<script>
+    //refresh navbar cartSummary
+    //should use the on() method, not click()!
+    $('#bookListView').on("click", "input.submit-btn", function (e) {
+            var datastring = $(this).closest('form').serialize();
+            $.ajax({
+                type: "POST",
+                url: "/Cart/AddToCart",
+                data: datastring,
+                success: function (response) {
+                    $("#cartSummary").html(response)
+                }
+            });
+            e.preventDefault();
+        });
+</script>

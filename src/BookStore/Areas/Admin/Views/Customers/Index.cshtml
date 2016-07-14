@@ -1,0 +1,101 @@
+﻿@model IEnumerable<UserViewModel>
+
+@{
+    ViewData["Title"] = "Customers";
+}
+
+<h2>Customers</h2>
+@(Html.Kendo().Grid<UserViewModel>()
+    .Name("customersGrid")
+    .Columns(columns =>
+    {
+        columns.Bound(c => c.FirstName);
+        columns.Bound(c => c.LastName);
+        columns.Bound(c => c.PhoneNumber);
+        columns.Bound(c => c.Email);
+    })
+    .ClientDetailTemplateId("detailTemplate")
+    .Scrollable(src => src.Height(800))
+    .Sortable()
+    .Filterable()
+    .Pageable()
+    .DataSource(dataSource => dataSource
+    .Ajax()
+    .PageSize(20)
+    .Read(r => r.Action("Read", "Customers", new { area = "Admin" }))
+    )
+    .Events(events => events.DataBound("dataBound"))
+)
+
+<script id="detailTemplate" type="text/kendo-tmpl">
+    @(Html.Kendo().TabStrip()
+        .Name("tabStrip_#=Id#")
+        .SelectedIndex(0)
+        .Animation(animation => animation.Open(open => open.Fade(FadeDirection.In)))
+        .Items(items =>
+        {
+            items.Add().Text("Orders").Content(@<text>
+    @(Html.Kendo().Grid<OrderViewModel>()
+        .Name("ordersGrid_#=Id#")
+        .Columns(columns =>
+        {
+            columns.Bound(o => o.Number);
+            columns.Bound(o => o.CreationDate).Format("{0:dd.MM.yyyy HH:mm}");
+            columns.Bound(o => o.Status.Name).Title("Status")
+            .HeaderHtmlAttributes(new { @class = "text-center" })
+            .HtmlAttributes(new { @class = "text-center" });
+            columns.Bound(o => o.TotalQty)
+            .HeaderHtmlAttributes(new { @class = "text-center" })
+            .HtmlAttributes(new { @class = "text-center" });
+            columns.Bound(o => o.TotalSum).Format("{0:c}")
+            .HeaderHtmlAttributes(new { @class = "text-center" })
+            .HtmlAttributes(new { @class = "text-right" })
+            // '\\#= \\#' should be escaped
+            // http://www.telerik.com/forums/aggregates-failing-on-hierarchical-grids
+            .ClientFooterTemplate("Total: \\#=kendo.format('{0:c}', sum)\\#")
+            .FooterHtmlAttributes(new { @class = "text-right" })
+            ;
+        })
+        .DataSource(dataSource => dataSource
+        .Ajax()
+        .PageSize(5)
+        .Read(r => r.Action("ReadOrdersByUserId", "Orders", new { area = "Admin", userId = "#=Id#" }))
+        .Aggregates(a => { a.Add(x => x.TotalSum).Sum(); })
+        .ServerOperation(false)
+        .Sort(s => s.Add(x => x.CreationDate).Descending())
+        )
+        .Pageable()
+        .Sortable()
+        .ToClientTemplate())
+    </text>);
+    items.Add().Text("Addresses").Content(
+    @<text>
+    @(Html.Kendo().Grid<AddressViewModel>()
+    .Name("addressesGrid_#=Id#")
+    .Columns(columns =>
+    {
+        columns.Bound(x => x.AddressLine1).Title("Address Line 1");
+        columns.Bound(x => x.AddressLine2).Title("Address Line 2");
+        columns.Bound(x => x.CityName).Title("City");
+        columns.Bound(x => x.StateCode).Title("State Code");
+        columns.Bound(x => x.ZipCode).Title("Zip");
+        columns.Bound(x => x.CountryName).Title("Country");
+    })
+    .DataSource(dataSource => dataSource
+        .Ajax()
+        .PageSize(5)
+        .Read(r => r.Action("ReadAddressesByUserId", "Addresses", new { area = "", userId = "#=Id#" }))
+    )
+    .Pageable()
+    .Sortable()
+    .ToClientTemplate())
+    </text>);
+            }).ToClientTemplate())
+</script>
+
+<script type="text/javascript">
+    // expand first row
+    function dataBound() {
+        this.expandRow(this.tbody.find("tr.k-master-row").first());
+    }
+</script>

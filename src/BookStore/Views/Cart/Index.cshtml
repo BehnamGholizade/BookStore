@@ -1,0 +1,130 @@
+﻿@{
+    ViewBag.Title = "Your Cart";
+}
+
+@(Html.Kendo().Window()
+            .Name("modal")
+            .Modal(true)
+            .Visible(false)
+            .Draggable(true)
+            .AutoFocus(true)
+            .MinWidth(300)
+            .MinHeight(100)
+)
+<div class="panel">
+    <div class="panel-body">
+        @(Html.Kendo().Grid<CartLine>()
+    .Name("cartGrid")
+    .Columns(columns =>
+    {
+        columns.Bound(x => x.Book.FullTitle);
+        columns.Bound(x => x.BookType.Name)
+        .HeaderHtmlAttributes(new { @class = "text-center" })
+        .HtmlAttributes(new { @class = "text-center" });
+        columns.Bound(x => x.Quantity)
+        .HeaderHtmlAttributes(new { @class = "text-center" })
+        .HtmlAttributes(new { @class = "text-center" })
+        .ClientFooterTemplate("Count: #=count#")
+        .FooterHtmlAttributes(new { @class = "text-center" });
+        columns.Bound(x => x.Price).Format("{0:c}")
+        .HeaderHtmlAttributes(new { @class = "text-center" })
+        .HtmlAttributes(new { @class = "text-right" });
+        columns.Bound(x => x.SubTotal).Format("{0:c}")
+        .HeaderHtmlAttributes(new { @class = "text-center" })
+        .HtmlAttributes(new { @class = "text-right" })
+        .ClientFooterTemplate("Total: #=kendo.format('{0:c}', sum)#")
+        .FooterHtmlAttributes(new { @class = "text-right" });
+        columns.Command(c => c.Destroy())
+        .HtmlAttributes(new { @class = "text-center" });
+    })
+    .Editable(e => e.Mode(GridEditMode.InLine))
+    //suppress standard delete dialog
+    .Editable(e => e.DisplayDeleteConfirmation(false))
+    .Sortable()
+    .DataSource(dataSource => dataSource
+    .Ajax()
+    .Model(m =>
+    {
+        m.Id(x => x.Id);
+        m.Field(x => x.Id).Editable(false);
+    })
+    .Read(r => r.Action("ReadCartLines", "Cart"))
+    .Destroy(d => d.Action("RemoveFromCart", "Cart"))
+    .Aggregates(a =>
+    {
+        a.Add(x => x.Quantity).Count();
+        a.Add(x => x.SubTotal).Sum();
+    })
+    .ServerOperation(false)//otherwise Aggregates throw NullReferenceException in ReadCartLines method
+    .Events(events =>
+    {
+        events.Error("errorHandler");
+        events.Change("onGridChange");
+    }))
+        )
+
+    </div>
+    <div class="panel-footer text-center">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+            <i class="fa fa-chevron-left">&nbsp;</i>Continue shopping
+        </a>
+        <a id="checkoutLink" asp-controller="Cart" asp-action="Checkout" class="btn btn-primary">
+            Checkout now&nbsp;<i class="fa fa-chevron-right"></i>
+        </a>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function onGridChange() {
+        var grid = $("#cartGrid").data("kendoGrid");
+        //count records
+        if (grid) {
+            var count = grid.dataSource.total();
+            console.log("Count: " + count);
+            if (count == 0) {
+                //hide table and disable checkout link
+                $(".panel-body").html("<div class=\"text-center\"><h2>Your cart is empty</h2></div>");
+                $("#checkoutLink").addClass("disabled");
+            }
+        }
+        //refresh navbar cart
+        console.log("refresh navbar cart");
+        $.get("/Cart/GetCartViewComponent", function (data) { $("#cartSummary").html(data); });
+    }
+</script>
+
+@* Alert window template *@
+<script type="text/x-kendo-template" id="alertTmpl">
+    <div class="text-center">
+        <p>${message}</p>
+        <button class="btn btn-default" id="okButton">OK</button>
+    </div>
+</script>
+
+<script>
+    //Error handler with alert window
+    function errorHandler(e) {
+        if (e.errors) {
+            var grid = this;
+            var message = "";
+            var wnd = $("#modal").data("kendoWindow");
+            var alertTmpl = kendo.template($("#alertTmpl").html());
+            // Create a message containing all errors.
+            $.each(e.errors, function (key, value) {
+                if ('errors' in value) {
+                    $.each(value.errors, function () {
+                        message += this + "\n";
+                    });
+                }
+            });
+            //set window title
+            $("#modal").prev().find(".k-window-title").html("<small>Error<\small>");
+            wnd.content(alertTmpl({ message: message }));
+            wnd.center().open();
+            grid.cancelChanges();
+            $("#okButton").click(function () {
+                wnd.close();
+            })
+        }
+    }
+</script>

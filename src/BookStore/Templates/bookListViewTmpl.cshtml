@@ -1,0 +1,82 @@
+﻿<script type="text/x-kendo-tmpl" id="bookListViewTmpl">
+    <div class="col-md-4 col-sm-6 col-xs-12">
+        <div class="panel panel-default panel-hover">
+            <div class="panel-body">
+                <div class="media">
+                    <div class="media-left">
+                        <a class="productUrl"
+                           href="@Url.Action("Details", "Books")/${Id}">
+                            <img src="${ImgCoverUrl}" alt="${FullTitle}"
+                                 height="138" width="110"
+                                 class="media-object" />
+                        </a>
+                        <p class="text-center" style="padding-top:5px;">
+                            <span class="label label-primary">
+                                ${kendo.toString(new Date(PublicationDate), "MMM yyyy")}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="media-body">
+                        <a class="productUrl" href="@Url.Action("Details", "Books")/${Id}">
+                            <h6 class="media-heading">${UpTitle}</h6>
+                            <h4 class="media-heading">${Title}</h4>
+                            <h6 class="media-heading">${SubTitle}</h6>
+                        </a>
+                        <p>
+                            <small>
+                                By
+                                #for (var i=0; i < BookAuthors.length; i++) {#
+                                <a class="productUrl" href="/Books/BooksByAuthorId/${BookAuthors[i].AuthorId}"
+                                   title="Books by ${BookAuthors[i].Author.FullName}">
+                                    <span class="label label-primary">
+                                        ${BookAuthors[i].Author.FullName}
+                                    </span>&nbsp;
+                                </a>
+                                # } #
+                            </small>
+                        </p>
+                        <table class="table table-condensed table-striped"
+                               style="margin-bottom:0">
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        eBook
+                                    </td>
+                                    <td>
+                                        <span class="color-price">
+                                            ${kendo.toString(EbookPrice, "c")}
+                                        </span>
+                                    </td>
+                                    <td class="text-right">
+                                        <form>
+                                            <input name="bookId" type="hidden" value="${Id}" />
+                                            <input name="bookTypeId" type="hidden" value="2" />
+                                            <input type="button" class="btn btn-success btn-xs submit-btn" value="Buy" />
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        book
+                                    </td>
+                                    <td>
+                                        <span class="color-price">
+                                            ${kendo.toString(PrintPrice, "c")}
+                                        </span>
+                                    </td>
+                                    <td class="text-right">
+                                        <form>
+                                            <input name="bookId" type="hidden" value="${Id}" />
+                                            <input name="bookTypeId" type="hidden" value="1" />
+                                            <input type="button" class="btn btn-success btn-xs submit-btn" value="Buy" />
+                                        </form>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
