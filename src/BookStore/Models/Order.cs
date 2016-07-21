@@ -25,7 +25,6 @@ namespace BookStore.Models
         public Address Address { get; set; }
 
         public int StatusId { get; set; }
-        [UIHint("OrderStatus")]
         public OrderStatus Status { get; set; }
 
         public int TotalQty { get; set; }

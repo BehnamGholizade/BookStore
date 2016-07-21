@@ -125,7 +125,9 @@
             columns.Bound(x => x.TotalSum).Format("{0:c}")
             .HeaderHtmlAttributes(new { @class = "text-center" })
             .HtmlAttributes(new { @class = "text-right" })
-            .Title("Sum");
+            .Title("Sum")
+            .ClientFooterTemplate("Total: #=kendo.format('{0:c}', sum)#")
+            .FooterHtmlAttributes(new { @class = "text-right" });
         })
     //.Scrollable(src => src.Height(800))
     .Sortable()
@@ -140,6 +142,8 @@
     })
     .Read(r => r.Action("ReadOrdersByUserId", "Orders", new { area = "Admin" }).Data("getUserId"))
     .PageSize(20)
+    .Aggregates(a => { a.Add(x => x.TotalSum).Sum(); })
+    .ServerOperation(false)
     .Sort(s => s.Add(x => x.CreationDate).Descending())
     )
     .ClientDetailTemplateId("orderLinesTmpl")

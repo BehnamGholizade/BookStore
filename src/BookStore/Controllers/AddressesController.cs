@@ -55,21 +55,23 @@ namespace BookStore.Controllers
             return Json(await _uow.AddressRepository.GetAll().Where(x => x.ZipId == zipId).ToListAsync());
         }
 
-        public IActionResult Read([DataSourceRequest]DataSourceRequest request)
+        public async Task<IActionResult> Read([DataSourceRequest]DataSourceRequest request)
         {
-            return Json(_uow.AddressRepository.GetAll().ToList().ToDataSourceResult(request));
+            var addresses = await _uow.AddressRepository.GetAll().ToListAsync();
+            return Json(addresses.ToDataSourceResult(request));
         }
 
-        public IActionResult ReadAddressesByUserId([DataSourceRequest]DataSourceRequest request, string userId)
+        public async Task<IActionResult> ReadAddressesByUserId([DataSourceRequest]DataSourceRequest request, string userId)
         {
             Mapper.Initialize(cfg => cfg.CreateMap<Address, AddressViewModel>());
-
-            return Json(_uow.AddressRepository.GetAll()
+            var addresses = await _uow.AddressRepository.GetAll()
                 .Include(x => x.Country).Include(x => x.State)
                 .Include(x => x.City).Include(x => x.Zip)
                 .Where(x => x.UserId == userId)
                 .ProjectTo<AddressViewModel>()
-                .ToList().ToDataSourceResult(request));
+                .ToListAsync();
+
+            return Json(addresses.ToDataSourceResult(request));
         }
 
         [HttpPost]

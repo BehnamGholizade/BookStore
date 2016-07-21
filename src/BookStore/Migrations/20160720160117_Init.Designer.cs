@@ -8,7 +8,7 @@ using BookStore.Data;
 namespace BookStore.Migrations
 {
     [DbContext(typeof(BookStoreContext))]
-    [Migration("20160713134856_Init")]
+    [Migration("20160720160117_Init")]
     partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -140,8 +140,6 @@ namespace BookStore.Migrations
                     b.Property<string>("FirstName")
                         .IsRequired();
 
-                    b.Property<string>("FullName");
-
                     b.Property<string>("LastName")
                         .IsRequired();
 
@@ -157,29 +155,26 @@ namespace BookStore.Migrations
 
                     b.Property<string>("Contents");
 
-                    b.Property<decimal>("EbookPrice")
+                    b.Property<decimal?>("EbookPrice")
                         .HasColumnType("decimal(10,2)");
 
                     b.Property<string>("FullDesc");
 
-                    b.Property<string>("FullTitle")
-                        .HasAnnotation("MaxLength", 386);
-
                     b.Property<string>("ImgCoverUrl");
-
-                    b.Property<bool>("IsVisible");
 
                     b.Property<string>("Isbn")
                         .IsRequired();
 
                     b.Property<int>("Pages");
 
-                    b.Property<decimal>("PrintPrice")
+                    b.Property<decimal?>("PrintPrice")
                         .HasColumnType("decimal(10,2)");
 
-                    b.Property<DateTime?>("PublicationDate");
+                    b.Property<DateTime>("PublicationDate");
 
                     b.Property<int>("PublisherId");
+
+                    b.Property<int?>("SearchRank");
 
                     b.Property<string>("ShortDesc");
 
@@ -215,21 +210,6 @@ namespace BookStore.Migrations
                     b.HasIndex("BookId");
 
                     b.ToTable("BookAuthors");
-                });
-
-            modelBuilder.Entity("BookStore.Models.BookTag", b =>
-                {
-                    b.Property<int>("BookId");
-
-                    b.Property<int>("TagId");
-
-                    b.HasKey("BookId", "TagId");
-
-                    b.HasIndex("BookId");
-
-                    b.HasIndex("TagId");
-
-                    b.ToTable("BookTags");
                 });
 
             modelBuilder.Entity("BookStore.Models.BookType", b =>
@@ -393,22 +373,6 @@ namespace BookStore.Migrations
                     b.ToTable("States");
                 });
 
-            modelBuilder.Entity("BookStore.Models.Tag", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd();
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasAnnotation("MaxLength", 50);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name");
-
-                    b.ToTable("Tags");
-                });
-
             modelBuilder.Entity("BookStore.Models.Zip", b =>
                 {
                     b.Property<int>("Id")
@@ -563,19 +527,6 @@ namespace BookStore.Migrations
                     b.HasOne("BookStore.Models.Book", "Book")
                         .WithMany("BookAuthors")
                         .HasForeignKey("BookId")
-                        .OnDelete(DeleteBehavior.Cascade);
-                });
-
-            modelBuilder.Entity("BookStore.Models.BookTag", b =>
-                {
-                    b.HasOne("BookStore.Models.Book", "Book")
-                        .WithMany("BookTags")
-                        .HasForeignKey("BookId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.HasOne("BookStore.Models.Tag", "Tag")
-                        .WithMany("BookTags")
-                        .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 

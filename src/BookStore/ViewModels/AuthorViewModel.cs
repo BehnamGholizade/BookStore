@@ -15,8 +15,7 @@ namespace BookStore.ViewModels
 
         public string FullName
         {
-            get { return FirstName + ' ' + LastName; }
-            set { }
+            get { return (FirstName + ' ' + LastName).Trim(); }
         }
 
         public string About { get; set; }

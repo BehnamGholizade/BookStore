@@ -12,7 +12,6 @@ namespace BookStore.Data
         private GenericRepository<BookType> bookTypeRepository;
         private GenericRepository<Author> authorRepository;
         private GenericRepository<Publisher> publisherRepository;
-        private GenericRepository<Tag> tagRepository;
         private OrderRepository orderRepository;
         private GenericRepository<OrderLine> orderLineRepository;
         private GenericRepository<OrderStatus> orderStatusRepository;
@@ -123,18 +122,6 @@ namespace BookStore.Data
                     publisherRepository = new GenericRepository<Publisher>(ctx, mapper);
                 }
                 return publisherRepository;
-            }
-        }
-
-        public GenericRepository<Tag> TagRepository
-        {
-            get
-            {
-                if (tagRepository == null)
-                {
-                    tagRepository = new GenericRepository<Tag>(ctx, mapper);
-                }
-                return tagRepository;
             }
         }
 

@@ -105,7 +105,7 @@
                                           asp-antiforgery="false" method="get"
                                           class="navbar-form navbar-left" role="search">
                                         <div class="input-group">
-                                            @Html.TextBox("query", null, new { @class = "form-control", @placeholder = "Search", @size = "50" })
+                                            @Html.TextBox("query", null, new { @class = "form-control", @placeholder = "Search by Title, Authors, Publisher...", @size = "50" })
                                             <div class="input-group-btn">
                                                 <button type="submit" class="btn btn-primary">
                                                     <i class="fa fa-search"></i>
@@ -154,6 +154,14 @@
             //refresh cart after Back button pressed
             $.get("/Cart/GetCartViewComponent", function (data) { $("#cartSummary").html(data); });
         });
+
+        //ViewList loading animation
+        function onRequestStart(e) {
+            kendo.ui.progress($(".k-content"), true);
+        }
+        function onRequestEnd(e) {
+            kendo.ui.progress($(".k-content"), false);
+        }
     </script>
 </body>
 </html>

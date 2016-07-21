@@ -16,11 +16,10 @@ namespace BookStore.Models
         [Required(ErrorMessage = "Last name is required")]
         public string LastName { get; set; }
 
-        public string FullName
-        {
-            get { return FirstName + ' ' + LastName; }
-            set { }
-        }
+        [NotMapped]
+        public string FullName { get {
+                return (FirstName + ' ' + LastName).Trim();
+            }}
 
         public string About { get; set; }
 

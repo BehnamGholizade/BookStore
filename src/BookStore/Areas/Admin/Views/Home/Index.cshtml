@@ -3,12 +3,19 @@
 }
 
 <h1>Admin Dashboard</h1>
-@(Html.Kendo().Chart<OrderChartViewModel>()
+<div class="k-content" style="position:relative" >
+    <div id="loading"></div>
+    @(Html.Kendo().Chart<OrderChartViewModel>()
         .Name("orderChart")
         .Title("Order Totals (" + DateTime.Now.Year + ")")
         .DataSource(datasource => datasource
         .Read(read => read.Action("ReadChartData", "Orders"))
-        .Group(group => {
+        .Events(events => {
+            events.RequestStart("onRequestStart");
+            events.RequestEnd("onRequestEnd");
+        })
+        .Group(group =>
+        {
             group.Add(model => model.StatusName);
         }
     )
@@ -31,7 +38,14 @@
     )
     .Tooltip(tooltip => tooltip
             .Visible(true)
-            .Template("#= value #")
-        )
+            .Template("#= value #"))    
 )
-
+</div>
+<script type="text/javascript">
+    function onRequestStart(e) {
+        kendo.ui.progress($("#loading"), true);
+    }
+    function onRequestEnd(e) {
+        kendo.ui.progress($("#loading"), false);
+    }
+</script>

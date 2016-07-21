@@ -12,8 +12,13 @@ namespace BookStore.Models
         public int Id { get; set; }
         public Book Book { get; set; }
         public BookType BookType { get; set; }
+
+        [Range(1, int.MaxValue, ErrorMessage = "Quantity must be greater than zero.")]
         public int Quantity { get; set; }
+
+        [Range(0.01, double.MaxValue, ErrorMessage = "Price must be greater than zero.")]
         public decimal Price { get; set; }
+
         public decimal SubTotal
         {
             get

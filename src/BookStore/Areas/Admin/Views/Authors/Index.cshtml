@@ -14,8 +14,8 @@
             .MinWidth(300)
             .MinHeight(100)
 )
-
-@(Html.Kendo().Grid<AuthorViewModel>()
+<div class="k-content">
+    @(Html.Kendo().Grid<AuthorViewModel>()
     .Name("authorsGrid")
     .Columns(columns =>
     {
@@ -57,8 +57,8 @@
         .Destroy(d => d.Action("Destroy", "Authors", new { area = "Admin" }))
         .PageSize(20)
     )
-)
-
+    )
+</div>
 <script type="text/x-kendo-template" id="textareaTmpl">
     <textarea name='About' readonly='readonly' cols='40' rows='5'><${About}></textarea>
 </script>

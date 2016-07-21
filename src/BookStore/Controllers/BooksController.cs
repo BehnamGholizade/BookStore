@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BookStore.ViewModels;
+using System.Threading;
+using System.Collections.Generic;
+using BookStore.Models;
+using System.Net;
 
 namespace BookStore.Controllers
 {
@@ -29,12 +33,12 @@ namespace BookStore.Controllers
         }
 
         //GET /books/books_read
-        public IActionResult Read([DataSourceRequest] DataSourceRequest request)
+        public async Task<IActionResult> Read([DataSourceRequest] DataSourceRequest request)
         {
-            return Json(_uow.BookRepository.GetAll()
+            var books = await _uow.BookRepository.GetAll()
                 .Include(ba => ba.BookAuthors).ThenInclude(a => a.Author)
-                .Include(p => p.Publisher)
-                .ToDataSourceResult(request));
+                .Include(p => p.Publisher).ToListAsync();
+            return Json(books.ToDataSourceResult(request));
         }
 
         // GET: /books/Details/5
@@ -48,7 +52,6 @@ namespace BookStore.Controllers
 
             var book = await _uow.BookRepository.GetAll()
                 .Include(a => a.BookAuthors).ThenInclude(ba => ba.Author)
-                .Include(t => t.BookTags).ThenInclude(bt => bt.Tag)
                 .Include(p => p.Publisher)
                 .FirstOrDefaultAsync(b => b.Id == id);
 
@@ -64,20 +67,30 @@ namespace BookStore.Controllers
         [HttpGet]
         public IActionResult Search(string query)
         {
+            TempData["queryString"] = query;
             return View("Search", query);
         }
 
-        public IActionResult ReadSearchResult([DataSourceRequest] DataSourceRequest request, string query)
+        public async Task<IActionResult> ReadSearchResult([DataSourceRequest] DataSourceRequest request)
         {
-            if (string.IsNullOrWhiteSpace(query))
+            string queryString = "";
+
+            if (TempData.ContainsKey("queryString"))
+                queryString = TempData["queryString"].ToString();
+
+            if (string.IsNullOrWhiteSpace(queryString))
             {
                 //return all books
-                return Read(request);
+                return await Read(request);
             }
 
-            return Json(_uow.BookRepository.GetRequestedBooks(query)
+            var books = await _uow.BookRepository.GetRequestedBooks(queryString)
                 .Include(ba => ba.BookAuthors).ThenInclude(a => a.Author)
-                .ToDataSourceResult(request));
+                .OrderByDescending(b => b.SearchRank)
+                .Take(50)
+                .ToListAsync();
+
+            return Json(books.ToDataSourceResult(request));
         }
 
         // GET: /books/Bestsellers
@@ -87,33 +100,33 @@ namespace BookStore.Controllers
             return View();
         }
 
-        public IActionResult ReadBestsellers([DataSourceRequest] DataSourceRequest request)
+        public async Task<IActionResult> ReadBestsellers([DataSourceRequest] DataSourceRequest request)
         {
-            return Json(_uow.BookRepository.GetBestsellers()
-            .Include(ba => ba.BookAuthors).ThenInclude(a => a.Author)
-            .ToDataSourceResult(request));
+            var books = await _uow.BookRepository.GetBestsellers()
+            .Include(ba => ba.BookAuthors).ThenInclude(a => a.Author).ToListAsync();
+            return Json(books.ToDataSourceResult(request));
         }
 
         // GET: /books/ReadAlsoBought/bookId
-        public IActionResult ReadAlsoBought([DataSourceRequest] DataSourceRequest request, int bookId)
+        public async Task<IActionResult> ReadAlsoBought([DataSourceRequest] DataSourceRequest request, int bookId)
         {
-            return Json(_uow.BookRepository.GetAlsoBought(bookId)
+            var books = await _uow.BookRepository.GetAlsoBought(bookId)
                 .Distinct().Include(ba => ba.BookAuthors).ThenInclude(a => a.Author)
-                .ToList()
-                .ToDataSourceResult(request));
+                .ToListAsync();
+            return Json(books.ToDataSourceResult(request));
         }
 
         // GET: /books/BooksByAuthorId/5
         [HttpGet]
-        public IActionResult BooksByAuthorId(int? id)
+        public async Task<IActionResult> BooksByAuthorId(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
 
-            var author = _uow.AuthorRepository.GetAll()
-                .FirstOrDefault(x => x.Id == id);
+            var author = await _uow.AuthorRepository.GetAll()
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (author == null)
             {
@@ -124,24 +137,25 @@ namespace BookStore.Controllers
             return View("BooksByAuthorId", authorVm);
         }
 
-        public IActionResult ReadBooksByAuthorId([DataSourceRequest] DataSourceRequest request, int authorId)
+        public async Task<IActionResult> ReadBooksByAuthorId([DataSourceRequest] DataSourceRequest request, int authorId)
         {
-            return Json(_uow.BookRepository.GetAll()
+            var books = await _uow.BookRepository.GetAll()
                 .Include(a => a.BookAuthors).ThenInclude(ba => ba.Author)
                 .Where(a => a.BookAuthors.Any(x => x.AuthorId == authorId))
-                .ToDataSourceResult(request));
+                .ToListAsync();
+            return Json(books.ToDataSourceResult(request));
         }
 
         // GET: /books/BooksByPublisherId/5
         [HttpGet]
-        public IActionResult BooksByPublisherId(int? id)
+        public async Task<IActionResult> BooksByPublisherId(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
-            var publisher = _uow.PublisherRepository.GetAll()
-                .FirstOrDefault(x => x.Id == id);
+            var publisher = await _uow.PublisherRepository.GetAll()
+                .FirstOrDefaultAsync(x => x.Id == id);
 
             if (publisher == null)
             {
@@ -152,12 +166,13 @@ namespace BookStore.Controllers
             return View("BooksByPublisherId", publisherVm);
         }
 
-        public IActionResult ReadBooksByPublisherId([DataSourceRequest] DataSourceRequest request, int publisherId)
+        public async Task<IActionResult> ReadBooksByPublisherId([DataSourceRequest] DataSourceRequest request, int publisherId)
         {
-            return Json(_uow.BookRepository.GetAll()
+            var books = await _uow.BookRepository.GetAll()
                 .Include(a => a.BookAuthors).ThenInclude(ba => ba.Author)
                 .Where(a => a.PublisherId == publisherId)
-                .ToDataSourceResult(request));
+                .ToListAsync();
+            return Json(books.ToDataSourceResult(request));
         }
 
         public async Task<IActionResult> ReadPublishers()

@@ -15,7 +15,8 @@
             .MinHeight(100)
 )
 
-@(Html.Kendo().Grid<PublisherViewModel>()
+<div class="k-content">
+    @(Html.Kendo().Grid<PublisherViewModel>()
     .Name("publishersGrid")
     .Columns(columns =>
     {
@@ -53,6 +54,7 @@
         .PageSize(20)
     )
 )
+</div>
 
 @* Delete confirmation window template *@
 <script type="text/x-kendo-template" id="confirmationTmpl">

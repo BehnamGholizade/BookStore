@@ -12,8 +12,8 @@
             .MinWidth(300)
             .MinHeight(100)
 )
-
-@(Html.Kendo().Grid<BookViewModel>()
+<div class="k-content">
+    @(Html.Kendo().Grid<BookViewModel>()
                 .Name("bookGrid")
                 .Columns(columns =>
                 {
@@ -70,8 +70,8 @@
       .Destroy(d => d.Action("Destroy", "Books", new { area = "Admin" }))
       .PageSize(20)
     )
-)
-
+    )
+</div>
 @* Delete confirmation window template *@
 <script type="text/x-kendo-template" id="confirmationTmpl">
     <div class="text-center">

@@ -5,7 +5,7 @@
 @* Kendo Client Template load *@
 @await Html.PartialAsync("~/Templates/bookListViewTmpl.cshtml")
 
-<div class="row">
+<div class="k-content">
     @(Html.Kendo().ListView<IEnumerable<Book>>()
         .Name("bookListView") //"id" of the widget
         .TagName("div") //element which wraps all ListView items
@@ -16,7 +16,12 @@
             .PageSize(48)
             .Sort(s => s.Add("PublicationDate").Descending())
             .Read(read => read.Action("ReadBestsellers", "Books")
-            .Type(HttpVerbs.Get)); //otherwise POST 404
+            .Type(HttpVerbs.Get))  //otherwise POST 404
+            .Events(events =>
+            {
+                events.RequestStart("onRequestStart");
+                events.RequestEnd("onRequestEnd");
+            });
         }).Pageable()
     )
 </div>

@@ -10,7 +10,7 @@
     <strong id="countElement"></strong> books found for request <strong>"@Model"</strong>
 </div>
 
-<div class="row">
+<div class="k-content">
     @(Html.Kendo().ListView<IEnumerable<Book>>()
         .Name("bookListView") //"id" of the widget
         .TagName("div") //element which wraps all ListView items
@@ -19,10 +19,14 @@
         {
             dataSource.Ajax()
             .PageSize(48)
-            .Sort(s => s.Add("PublicationDate").Descending())
-            .Read(read => read.Action("ReadSearchResult", "Books", new { query = @Model })
+            .Read(read => read.Action("ReadSearchResult", "Books")
             .Type(HttpVerbs.Get)) //otherwise POST 404
-            .Events(ev => ev.Change("onListViewChange"));
+            .Events(events =>
+            {
+                events.Change("onListViewChange");
+                events.RequestStart("onRequestStart");
+                events.RequestEnd("onRequestEnd");
+            });
         }).Pageable()
     )
 </div>

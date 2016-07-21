@@ -8,16 +8,12 @@ namespace BookStore.Data
     public class BookStoreContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
     {
         public BookStoreContext(DbContextOptions options) : base(options)
-        {
-            //    Database.EnsureCreated();
-        }
+        { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Book>().HasIndex(x => x.PublicationDate);
             modelBuilder.Entity<Order>().HasIndex(x => x.CreationDate);
-
-            modelBuilder.Entity<Tag>().HasIndex(x => x.Name);
 
             modelBuilder.Entity<BookAuthor>()
                 .HasKey(x => new { x.BookId, x.AuthorId });
@@ -31,18 +27,6 @@ namespace BookStore.Data
                 .HasOne(b => b.Author)
                 .WithMany(ba => ba.BookAuthors)
                 .HasForeignKey(b => b.AuthorId);
-
-            modelBuilder.Entity<BookTag>().HasKey(x => new { x.BookId, x.TagId });
-
-            modelBuilder.Entity<BookTag>()
-                .HasOne(b => b.Book)
-                .WithMany(bt => bt.BookTags)
-                .HasForeignKey(b => b.BookId);
-
-            modelBuilder.Entity<BookTag>()
-                .HasOne(b => b.Tag)
-                .WithMany(bt => bt.BookTags)
-                .HasForeignKey(b => b.TagId);
 
             modelBuilder.Entity<Address>()
                 .HasOne(a => a.Country)
@@ -89,10 +73,7 @@ namespace BookStore.Data
         public DbSet<Book> Books { get; set; }
         public DbSet<Author> Authors { get; set; }
         public DbSet<Publisher> Publishers { get; set; }
-        public DbSet<Tag> Tags { get; set; }
         public DbSet<BookAuthor> BookAuthors { get; set; }
-        public DbSet<BookTag> BookTags { get; set; }
-
 
         // Orders
         public DbSet<BookType> BookTypes { get; set; }

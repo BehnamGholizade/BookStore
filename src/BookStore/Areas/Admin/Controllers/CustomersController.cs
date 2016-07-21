@@ -4,6 +4,8 @@ using Kendo.Mvc.Extensions;
 using Kendo.Mvc.UI;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace BookStore.Areas.Admin.Controllers
 {
@@ -27,9 +29,10 @@ namespace BookStore.Areas.Admin.Controllers
             return View();
         }
 
-        public IActionResult Read([DataSourceRequest]DataSourceRequest request)
+        public async Task<IActionResult> Read([DataSourceRequest]DataSourceRequest request)
         {
-            return Json(_uow.UserRepository.GetAll().ToDataSourceResult(request));
+            var users = await _uow.UserRepository.GetAll().ToListAsync();
+            return Json(users.ToDataSourceResult(request));
         }
     }
 }

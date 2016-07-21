@@ -34,9 +34,10 @@ namespace BookStore.Areas.Admin.Controllers
             return View();
         }
 
-        public IActionResult Read([DataSourceRequest]DataSourceRequest request)
+        public async Task<IActionResult> Read([DataSourceRequest]DataSourceRequest request)
         {
-            return Json(_uow.AuthorRepository.GetAll().ToDataSourceResult(request));
+            var authors = await _uow.AuthorRepository.GetAll().ToListAsync();
+            return Json(authors.ToDataSourceResult(request));
         }
 
         // Data for multiselect dropdownlist
@@ -65,6 +66,7 @@ namespace BookStore.Areas.Admin.Controllers
             if (ModelState.IsValid)
             {
                 var authorDb = _mapper.Map<Author>(author);
+
                 _uow.AuthorRepository.Insert(authorDb);
                 await _uow.SaveChangesAsync();
                 author.Id = authorDb.Id;

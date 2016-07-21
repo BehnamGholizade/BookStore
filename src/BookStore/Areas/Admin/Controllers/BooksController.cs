@@ -53,11 +53,6 @@ namespace BookStore.Areas.Admin.Controllers
                 {
                     book.BookAuthors.Add(new BookAuthor { AuthorId = bookVm.SelectedBookAuthorIds[i] });
                 }
-                // Tags Multiselect
-                for (int i = 0; i < bookVm.SelectedBookTagIds.Count(); i++)
-                {
-                    book.BookTags.Add(new BookTag { TagId = bookVm.SelectedBookTagIds[i] });
-                }
 
                 _uow.BookRepository.Insert(book);
                 await _uow.SaveChangesAsync();
@@ -78,7 +73,6 @@ namespace BookStore.Areas.Admin.Controllers
             var book = await _uow.BookRepository.GetAll()
                 .Include(x => x.Publisher)
                 .Include(x => x.BookAuthors).ThenInclude(x => x.Author)
-                .Include(x => x.BookTags).ThenInclude(x => x.Tag)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
             if (book == null)
@@ -108,11 +102,6 @@ namespace BookStore.Areas.Admin.Controllers
                 for (int i = 0; i < bookVm.SelectedBookAuthorIds.Count(); i++)
                 {
                     book.BookAuthors.Add(new BookAuthor { AuthorId = bookVm.SelectedBookAuthorIds[i] });
-                }
-                // Tags Multiselect
-                for (int i = 0; i < bookVm.SelectedBookTagIds.Count(); i++)
-                {
-                    book.BookTags.Add(new BookTag { TagId = bookVm.SelectedBookTagIds[i] });
                 }
 
                 _uow.BookRepository.Update(book);

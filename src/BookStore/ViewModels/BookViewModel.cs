@@ -12,12 +12,11 @@ namespace BookStore.ViewModels
 
         public ICollection<BookAuthor> BookAuthors { get; set; }
 
+        [Required(ErrorMessage = "Publisher is required")]
         public int PublisherId { get; set; }
 
         [IgnoreMap]
         public Publisher Publisher { get; set; }
-
-        public ICollection<BookTag> BookTags { get; set; }
 
         [MaxLength(128)]
         public string UpTitle { get; set; }
@@ -29,19 +28,16 @@ namespace BookStore.ViewModels
         [MaxLength(128)]
         public string SubTitle { get; set; }
 
-        [MaxLength(386)]
         public string FullTitle
         {
-            get
-            {
-                return (UpTitle + ' ' + Title + ' ' + SubTitle).Trim();
-            }
-            set { }
+            get { return (UpTitle + ' ' + Title + ' ' + SubTitle).Trim(); }
         }
 
         [Required(ErrorMessage = "Code ISBN is required")]
         public string Isbn { get; set; }
 
+        [Required(ErrorMessage = "Pages is required")]
+        [Range(1, int.MaxValue, ErrorMessage = "Pages must be greater than zero.")]
         public int Pages { get; set; }
 
         public string Contents { get; set; }
@@ -50,16 +46,15 @@ namespace BookStore.ViewModels
 
         public string FullDesc { get; set; }
 
-        public decimal EbookPrice { get; set; }
+        public decimal? EbookPrice { get; set; }
 
-        public decimal PrintPrice { get; set; }
+        public decimal? PrintPrice { get; set; }
 
-        public DateTime? PublicationDate { get; set; }
+        [Required(ErrorMessage = "Publication Date is required")]
+        public DateTime PublicationDate { get; set; }
 
         public string ImgCoverUrl { get; set; }
 
         public int[] SelectedBookAuthorIds { get; set; } = new int[] { };
-
-        public int[] SelectedBookTagIds { get; set; } = new int[] { };
     }
 }

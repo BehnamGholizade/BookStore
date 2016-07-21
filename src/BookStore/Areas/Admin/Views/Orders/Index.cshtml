@@ -15,7 +15,8 @@
     .MinHeight(100)
 )
 
-@(Html.Kendo().Grid<OrderViewModel>()
+<div class="k-content">
+    @(Html.Kendo().Grid<OrderViewModel>()
         .Name("ordersGrid")
         .Columns(columns =>
         {
@@ -44,7 +45,7 @@
                 c.Edit().Text("Change status");
             }).HeaderHtmlAttributes(new { @class = "text-center" })
             .HtmlAttributes(new { @class = "text-center" })
-            .Title("Commands").Width(210);
+            .Title("Commands").Width(250);
         })
     .Editable(e => e.Mode(GridEditMode.InLine))
     .Scrollable(src => src.Height(800))
@@ -69,6 +70,7 @@
     )
     .ClientDetailTemplateId("orderLinesTmpl")
 )
+</div>
 
 @* Order Lines Template *@
 <script type="text/x-kendo-template" id="orderLinesTmpl">

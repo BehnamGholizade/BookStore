@@ -9,7 +9,7 @@ namespace BookStore.Models
         [Key]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Type name is required")]
+        [Required(ErrorMessage = "Type Name is required")]
         public string Name { get; set; }
 
         [JsonIgnore]

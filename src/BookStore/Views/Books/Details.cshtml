@@ -3,56 +3,48 @@
 @{
     ViewData["Title"] = "Book Detail";
 }
-<div id="bookDetailView" class="panel">
-    <div class="panel-body">
-        <div class="media">
-            <h5 class="media-heading">@Model.UpTitle</h5>
-            <h3 class="media-heading">@Model.Title</h3>
-            <h5 class="media-heading">@Model.SubTitle</h5>
-            <div class="media-body">
-                <p>
-                    By
-                    @foreach (var ba in @Model.BookAuthors)
-                    {
-                        <a class="productUrl" href="/Books/BooksByAuthorId/@ba.AuthorId"
-                           title="Books by @ba.Author.FullName">
-                            <span class="label label-primary">
-                                @ba.Author.FullName
-                            </span><i>&nbsp;</i>
-                        </a>
-                    }
-                </p>
-                <p>@Model.ShortDesc</p>
-                <ul class="list-unstyled text-muted">
-                    <li>ISBN: <strong>@Model.Isbn</strong></li>
-                    <li>Pages: <strong>@Model.Pages</strong></li>
-                    <li>
-                        Publisher:
-                        <a class="productUrl" href="@Url.Action("BooksByPublisherId", "Books")/@Model.PublisherId"
-                           title="Books by @Model.Publisher.Name">
-                            <span class="label label-primary">@Model.Publisher.Name</span>
-                        </a>
-                    </li>
-                    <li>PublicationDate: <strong>@Model.PublicationDate.Value.ToString("MMM yyyy")</strong></li>
-                    <li>
-                        Tags:
-                        @foreach (var bt in @Model.BookTags)
+<div id="bookDetailView">
+    <div class="media">
+        <h5 class="media-heading">@Model.UpTitle</h5>
+        <h3 class="media-heading">@Model.Title</h3>
+        <h5 class="media-heading">@Model.SubTitle</h5>
+        <div class="media-body">
+            <p>
+                By
+                @foreach (var ba in @Model.BookAuthors)
+                {
+                    <a class="productUrl" href="/Books/BooksByAuthorId/@ba.AuthorId"
+                       title="Books by @ba.Author.FullName">
+                        <span class="label label-primary">
+                            @ba.Author.FullName
+                        </span><i>&nbsp;</i>
+                    </a>
+                }
+            </p>
+            <p>@Model.ShortDesc</p>
+            <ul class="list-unstyled text-muted">
+                <li>ISBN: <strong>@Model.Isbn</strong></li>
+                <li>Pages: <strong>@Model.Pages</strong></li>
+                <li>
+                    Publisher:
+                    <a class="productUrl" href="@Url.Action("BooksByPublisherId", "Books")/@Model.PublisherId"
+                       title="Books by @Model.Publisher.Name">
+                        <span class="label label-primary">@Model.Publisher.Name</span>
+                    </a>
+                </li>
+                <li>PublicationDate: <strong>@Model.PublicationDate.ToString("MMM yyyy")</strong></li>
+            </ul>
+            <br />
+            <div class="col-md-6 price_block">
+                <table class="table table-condensed table-striped">
+                    <tbody>
+                        @if ((Model.EbookPrice ?? 0) != 0)
                         {
-                            <span class="label label-primary">
-                                @bt.Tag.Name
-                            </span><i>&nbsp;</i>
-                        }
-                    </li>
-                </ul>
-                <br />
-                <div class="col-md-6 price_block">
-                    <table class="table table-condensed table-striped">
-                        <tbody>
                             <tr>
                                 <td>
                                     <i class="fa fa-file-pdf-o"></i> eBook:
                                 </td>
-                                <td><span class="color-price">@Model.EbookPrice.ToString("C")</span></td>
+                                <td><span class="color-price">@((Model.EbookPrice ?? 0).ToString("C"))</span></td>
                                 <td>
                                     <form>
                                         <input name="bookId" type="hidden" value=@Model.Id />
@@ -61,12 +53,15 @@
                                     </form>
                                 </td>
                             </tr>
+                        }
+                        @if ((Model.PrintPrice ?? 0) != 0)
+                        {
                             <tr>
                                 <td>
                                     <i class="fa fa-book"></i> Print Book:
                                 </td>
                                 <td>
-                                    <span class="color-price">@Model.EbookPrice.ToString("C")</span>
+                                    <span class="color-price">@((Model.PrintPrice ?? 0).ToString("C"))</span>
                                 </td>
                                 <td>
                                     <form>
@@ -76,44 +71,45 @@
                                     </form>
                                 </td>
                             </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="media-right media-middle">
-                <img src=@Model.ImgCoverUrl alt=@Model.FullTitle
-                     height="250" width="200"
-                     class="media-object" />
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
-    <div class="panel-footer">
-        <button class="btn btn-primary" onclick="window.history.go(-1); return false;">
-            <i class="fa fa-chevron-left">&nbsp;</i>Back to catalog
-        </button>
+        <div class="media-right media-middle">
+            <img src=@Model.ImgCoverUrl alt=@Model.FullTitle
+                 height="250" width="200"
+                 class="media-object" />
+        </div>
     </div>
 </div>
 <div id="alsoBoughtDiv">
+    <hr />
     <h3>Customers Who Bought This Item Also Bought</h3>
     <div>
         @* Kendo Client Template load *@
         @await Html.PartialAsync("~/Templates/bookListViewTmpl.cshtml")
 
-        <div class="row">
+        <div class="k-content">
             @(Html.Kendo().ListView<IEnumerable<Book>>()
         .Name("bookListView") //"id" of the widget
         .TagName("div") //element which wraps all ListView items
         .ClientTemplateId("bookListViewTmpl") //template for rendering the ListView items
         .DataSource(dataSource =>
-                    {
-                        dataSource.Ajax()
-                        .PageSize(6)
-                        .Sort(s => s.Add("PublicationDate").Descending())
-                        .Read(read => read.Action("ReadAlsoBought", "Books").Data("getCurrentBookId")
-                        .Type(HttpVerbs.Get) //otherwise POST 404
-                        ).Events(e => e.Change("onChange"));
-                    }).Pageable()
+        {
+            dataSource.Ajax()
+            .PageSize(6)
+            .Sort(s => s.Add("PublicationDate").Descending())
+            .Read(read => read.Action("ReadAlsoBought", "Books").Data("getCurrentBookId")
+            .Type(HttpVerbs.Get) //otherwise POST 404
             )
+            .Events(events =>
+            {
+                events.Change("onListViewChange");
+                events.RequestStart("onRequestStart");
+                events.RequestEnd("onRequestEnd");
+            });
+        }).Pageable())
         </div>
     </div>
 </div>
@@ -132,9 +128,9 @@
             }
         });
     });
-    
+
     // hide "Customers Also Bought" div if no records
-    function onChange() {
+    function onListViewChange() {
         if ($("#bookListView").data("kendoListView").dataSource.total() == 0) {
             $("#alsoBoughtDiv").hide();
         };

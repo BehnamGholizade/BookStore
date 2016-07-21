@@ -5,7 +5,8 @@
 }
 
 <h2>Customers</h2>
-@(Html.Kendo().Grid<UserViewModel>()
+<div class="k-content">
+    @(Html.Kendo().Grid<UserViewModel>()
     .Name("customersGrid")
     .Columns(columns =>
     {
@@ -25,7 +26,8 @@
     .Read(r => r.Action("Read", "Customers", new { area = "Admin" }))
     )
     .Events(events => events.DataBound("dataBound"))
-)
+    )
+</div>
 
 <script id="detailTemplate" type="text/kendo-tmpl">
     @(Html.Kendo().TabStrip()

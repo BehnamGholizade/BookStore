@@ -2,6 +2,7 @@
 using FastMember;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -25,14 +26,17 @@ namespace BookStore.Data
         private readonly UserManager<ApplicationUser> _userManager;
         private RoleManager<ApplicationRole> _roleManager;
         private string _dbName;
+        private readonly ILogger _logger;
 
         public DatabaseInitializer(BookStoreContext context, UserManager<ApplicationUser> userManager,
-            RoleManager<ApplicationRole> roleManager)
+            RoleManager<ApplicationRole> roleManager,
+            ILoggerFactory loggerFactory)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _ctx = context;
             _dbName = _ctx.Database.GetDbConnection().Database;
+            _logger = loggerFactory.CreateLogger<DatabaseInitializer>();
         }
 
         public async Task Seed()
@@ -177,11 +181,6 @@ namespace BookStore.Data
                     BulkWriteToServer<Publisher>(@"../BookStore/Resources/Publishers.json", "Publishers");
                 }
 
-                if (!_ctx.Tags.Any())
-                {
-                    BulkWriteToServer<Tag>(@"../BookStore/Resources/Tags.json", "Tags");
-                }
-
                 if (!_ctx.Books.Any())
                 {
                     BulkWriteToServer<Book>(@"../BookStore/Resources/Books.json", "Books");
@@ -190,11 +189,6 @@ namespace BookStore.Data
                 if (!_ctx.BookAuthors.Any())
                 {
                     BulkWriteToServer<BookAuthor>(@"../BookStore/Resources/BookAuthors.json", "BookAuthors");
-                }
-
-                if (!_ctx.BookTags.Any())
-                {
-                    BulkWriteToServer<BookTag>(@"../BookStore/Resources/BookTags.json", "BookTags");
                 }
 
                 if (!_ctx.OrderStatuses.Any())
@@ -219,17 +213,56 @@ namespace BookStore.Data
                     _ctx.SaveChanges();
                 };
 
-                _ctx.Database.ExecuteSqlCommand($"delete from [{_dbName}].[dbo].[OrderLines]; dbcc checkident ('[{_dbName}].[dbo].[OrderLines]', reseed, 0);");
-                _ctx.Database.ExecuteSqlCommand($"delete from [{_dbName}].[dbo].[Orders]; dbcc checkident ('[{_dbName}].[dbo].[Orders]', reseed, 0);");
-
                 if (!_ctx.Orders.Any())
                 {
                     CreateRandomOrders();
                 }
+
+                //Full-Text search
+                using (var connection = _ctx.Database.GetDbConnection())
+                {
+                    try
+                    {
+                        connection.Open();
+                        var cmd = connection.CreateCommand();
+                        // check Is Full-Text Search Installed
+                        cmd.CommandText = "SELECT FULLTEXTSERVICEPROPERTY('IsFullTextInstalled');";
+                        var result = (int)cmd.ExecuteScalar();
+                        if (result == 1)
+                        {
+                            // check is Full-Text Catalog exist
+                            cmd.CommandText = "SELECT COUNT(1) FROM sys.fulltext_catalogs WHERE [name] = 'BookCatalog'";
+                            result = (int)cmd.ExecuteScalar();
+                            if (result == 0)
+                            {
+                                _ctx.Database.ExecuteSqlCommand("CREATE FULLTEXT CATALOG [BookCatalog] WITH ACCENT_SENSITIVITY = ON AS DEFAULT");
+                                _ctx.Database.ExecuteSqlCommand("CREATE FULLTEXT INDEX ON [dbo].[Books] ("
+                                    + "UpTitle Language 1033, "
+                                    + "Title Language 1033, "
+                                    + "SubTitle Language 1033, "
+                                    + "Isbn Language 1033, "
+                                    + "FullDesc Language 1033, "
+                                    + "ShortDesc Language 1033"
+                                    + ") KEY INDEX PK_Books ON [BookCatalog]; ");
+                                _ctx.Database.ExecuteSqlCommand("CREATE FULLTEXT INDEX ON [dbo].[Authors] ("
+                                    + "FirstName Language 1033, "
+                                    + "LastName Language 1033"
+                                    + ") KEY INDEX PK_Authors ON [BookCatalog]; ");
+                                _ctx.Database.ExecuteSqlCommand("CREATE FULLTEXT INDEX ON [dbo].[Publishers] ("
+                                    + " Name Language 1033 "
+                                    + ") KEY INDEX PK_Publishers ON [BookCatalog]; ");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(4, "Full-Text search creation error: " + ex.Message);
+                    }
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                _logger.LogError(1, ex.Message);
             }
             finally
             {
@@ -253,6 +286,7 @@ namespace BookStore.Data
                     var keys = ((JObject)JToken.Parse(json).First).Properties().Select(x => x.Name).ToList();
 
                     using (var bulkCopy = new SqlBulkCopy(_ctx.Database.GetDbConnection().ConnectionString,
+                        // option for insert Id's
                         SqlBulkCopyOptions.KeepIdentity))
                     using (var reader = ObjectReader.Create(data))
                     {
@@ -266,9 +300,9 @@ namespace BookStore.Data
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+               _logger.LogError(2, "BulkWriteToServer<T>() error: " + ex.Message);
             }
         }
 
@@ -333,7 +367,7 @@ namespace BookStore.Data
                         {
                             BookId = bookId,
                             BookTypeId = bookTypeId,
-                            Price = (bookTypeId == 1) ? book.PrintPrice : book.EbookPrice,
+                            Price = (bookTypeId == 1) ? (book.PrintPrice ?? 0) : (book.EbookPrice ?? 0),
                             OrderId = order.Id,
                             Quantity = rnd.Next(1, 6)
                         });
@@ -348,84 +382,13 @@ namespace BookStore.Data
                 $"from [{_dbName}].[dbo].[OrderLines] ol group by ol.OrderId) ol where o.Id = ol.OrderId;");
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                _logger.LogError(3, "CreateRandomOrders() error: " + ex.Message);
             }
         }
 
-        /// <summary>
-        /// Generates tags from JSON file (book titles and authors) and loads them in Tag and BookTag tables
-        /// </summary>
-        //private void MakeTags()
-        //{
-        //    try
-        //    {
-        //        _ctx.Database.ExecuteSqlCommand("delete from Tag;");
-        //        _ctx.Database.ExecuteSqlCommand("delete from BookTag;");
-
-        //        List<Book> books = new List<Book>();
-        //        var path = @"../Resources/BooksFull.json";
-        //        using (StreamReader sr = new StreamReader(path))
-        //        {
-        //            string json = sr.ReadToEnd();
-        //            books = JsonConvert.DeserializeObject<List<Book>>(json);
-        //        }
-
-        //        int tagId = 1;
-        //        _ctx.ChangeTracker.AutoDetectChangesEnabled = false;
-        //        foreach (var book in books)
-        //        {
-        //            var bookId = book.Id;
-        //            // replace non alphanumeric chars by space and remove extra spaces
-        //            var regexString = Regex.Replace(Regex.Replace(book.UpTitle + ' ' + book.Title + ' ' + book.SubTitle, @"[^a-zA-Z0-9 ]", " ").Trim().ToUpperInvariant(), @"\s+", " ");
-        //            var tagsSet = new HashSet<string>(regexString.Split(' ').ToList());
-
-        //            foreach (var authors in book.BookAuthors)
-        //            {
-        //                tagsSet.Add(authors.Author.FirstName.ToUpperInvariant());
-        //                tagsSet.Add(authors.Author.LastName.ToUpperInvariant());
-        //            }
-
-        //            try
-        //            {
-        //                foreach (var tag in tagsSet)
-        //                {
-        //                    var tagDb = _ctx.Tags.FirstOrDefault(t => t.Name == tag);
-        //                    if (tagDb == null)
-        //                    {
-        //                        _ctx.Tags.Add(new Tag { Id = tagId, Name = tag });
-        //                        _ctx.BookTags.Add(new BookTag { BookId = book.Id, TagId = tagId });
-        //                        _ctx.SaveChanges();
-        //                        tagId++;
-        //                    }
-        //                    else
-        //                    {
-        //                        _ctx.BookTags.Add(new BookTag { BookId = book.Id, TagId = tagDb.Id });
-        //                        _ctx.SaveChanges();
-        //                    }
-        //                }
-        //                //if (book.Id % 100 == 0) _ctx.SaveChanges();
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                Console.WriteLine(ex.Message);
-        //            }
-        //        }
-
-        //        _ctx.SaveChanges();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine(ex.Message);
-        //    }
-        //    finally
-        //    {
-        //        _ctx.ChangeTracker.AutoDetectChangesEnabled = true;
-        //    }
-        //}
-
-        //Does't work in RTM((
+        //Does't work in RTM
         //example for identity insert with addRange() method
         //using (var dbContextTransaction = _ctx.Database.BeginTransaction())
         //{

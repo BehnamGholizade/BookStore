@@ -33,10 +33,11 @@ namespace BookStore.Areas.Admin.Controllers
             return View();
         }
 
-        public IActionResult Read([DataSourceRequest]DataSourceRequest request)
+        public async Task<IActionResult> Read([DataSourceRequest]DataSourceRequest request)
         {
-            return Json(_uow.PublisherRepository.GetAll()
-                .OrderBy(x => x.Name).ToDataSourceResult(request));
+            var publishers = await _uow.PublisherRepository.GetAll()
+                .OrderBy(x => x.Name).ToListAsync();
+            return Json(publishers.ToDataSourceResult(request));
         }
 
         [HttpPost]

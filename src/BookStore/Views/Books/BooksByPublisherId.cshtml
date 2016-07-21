@@ -11,7 +11,7 @@
     <strong id="countElement"></strong> books found for publisher <strong>"@Model.Name"</strong>
 </div>
 
-<div class="row">
+<div class="k-content">
     @(Html.Kendo().ListView<IEnumerable<Book>>()
         .Name("bookListView") //"id" of the widget
         .TagName("div") //element which wraps all ListView items
@@ -23,7 +23,12 @@
             .Sort(s => s.Add("PublicationDate").Descending())
             .Read(read => read.Action("ReadBooksByPublisherId", "Books", new { publisherId = @Model.Id })
             .Type(HttpVerbs.Get)) //otherwise POST 404
-            .Events(ev => ev.Change("onListViewChange"));
+            .Events(events =>
+            {
+                events.Change("onListViewChange");
+                events.RequestStart("onRequestStart");
+                events.RequestEnd("onRequestEnd");
+            });
         }).Pageable()
     )
 </div>

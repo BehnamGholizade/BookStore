@@ -24,7 +24,7 @@ namespace BookStore.Models
                     Book = book,
                     BookType = bookType,
                     Quantity = quantity,
-                    Price = (bookType.Id == 1) ? book.PrintPrice : book.EbookPrice
+                    Price = (bookType.Id == 1) ? (book.PrintPrice ?? 0) : (book.EbookPrice ?? 0)
                 });
             }
             else

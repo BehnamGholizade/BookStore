@@ -10,11 +10,29 @@
 
 <h2>@ViewData["Title"].</h2>
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-6">
         <section>
             <form asp-controller="Account" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" class="form-horizontal">
                 <h4>Use a local account to log in.</h4>
                 <hr />
+                <div class="form-group">
+                    <div class="alert alert-info" role="alert">
+                        Use the administrator account to access the Admin Dashboard:
+                        <dl class="dl-horizontal">
+                            <dt>Email</dt>
+                            <dd>admin@test.com</dd>
+                            <dt>Password</dt>
+                            <dd>Adminw0rd!</dd>
+                        </dl>
+                        or a standard user account:
+                        <dl class="dl-horizontal">
+                            <dt>Email</dt>
+                            <dd>customer@test.com</dd>
+                            <dt>Password</dt>
+                            <dd>Customerw0rd!</dd>
+                        </dl>
+                    </div>
+                </div>
                 <div asp-validation-summary="All" class="text-danger"></div>
                 <div class="form-group">
                     <label asp-for="Email" class="col-md-2 control-label"></label>

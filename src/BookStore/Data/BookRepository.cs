@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using System.Text.RegularExpressions;
 using BookStore.Models;
 using Microsoft.EntityFrameworkCore;
@@ -15,23 +16,19 @@ namespace BookStore.Data
 
         public IQueryable<Book> GetRequestedBooks(string query)
         {
-            // replace non alphanumeric chars by space and remove extra spaces
-            var regexString = Regex.Replace(Regex.Replace(query, @"[^a-zA-Z0-9 ]", " ").Trim().ToUpperInvariant(), @"\s+", " ");
-            // remove duplicates
-            var tagsSet = new HashSet<string>(regexString.Split(' ').ToList());
+            var books = _ctx.Books.FromSql("SELECT DISTINCT " +
+                "b.[Id],b.[Contents],b.[EbookPrice],b.[FullDesc],b.[ImgCoverUrl],b.[Isbn]," +
+                "b.[Pages], b.[PrintPrice], b.[PublicationDate], b.[PublisherId], b.[ShortDesc], b.[SubTitle]," +
+                "b.[Title], b.[UpTitle], (bft.[Rank] + ISNULL(aft.[Rank], 0) + ISNULL(pft.[Rank], 0)) as [SearchRank]" +
+                "FROM dbo.Books b " +
+                "LEFT JOIN dbo.BookAuthors ba ON b.Id = ba.BookId " +
+                "LEFT JOIN dbo.Authors a ON ba.AuthorId = a.Id " +
+                "LEFT JOIN dbo.Publishers p ON b.PublisherId = p.Id " +
+                $"INNER JOIN FREETEXTTABLE(Books, (UpTitle, Title, SubTitle, FullDesc, Isbn, ShortDesc), '{query}') bft ON b.Id = bft.[Key] " +
+                $"LEFT JOIN FREETEXTTABLE(Authors,(FirstName, LastName), '{query}') aft ON ba.AuthorId = aft.[Key] " +
+                $"LEFT JOIN FREETEXTTABLE(Publishers, Name, '{query}') pft ON b.PublisherId = pft.[Key]");
 
-            int tagCount = tagsSet.Count();
-            var tagsQueryString = "'" + string.Join("','", tagsSet) + "'";
-
-            return from b in _ctx.Books
-                    where (
-                    from bt in _ctx.BookTags
-                    from t in _ctx.Tags
-                    where bt.TagId == t.Id && tagsQueryString.Contains(t.Name)
-                    group bt by bt.BookId into grp
-                    where grp.Count() == tagCount
-                    select grp.Key).Contains(b.Id)
-                    select b;
+            return books;
         }
 
         public IQueryable<Book> GetBestsellers()
@@ -48,13 +45,13 @@ namespace BookStore.Data
         public IQueryable<Book> GetAlsoBought(int bookId)
         {
             return from b in _ctx.Books
-                join ol in _ctx.OrderLines
-                    on b.Id equals ol.BookId
-                where ol.BookId != bookId
-                      && (from o in _ctx.OrderLines
-                          where o.BookId == bookId
-                          select o.OrderId).Contains(ol.OrderId)
-                select b;
+                   join ol in _ctx.OrderLines
+                       on b.Id equals ol.BookId
+                   where ol.BookId != bookId
+                         && (from o in _ctx.OrderLines
+                             where o.BookId == bookId
+                             select o.OrderId).Contains(ol.OrderId)
+                   select b;
         }
 
         public override void Update(Book book)
@@ -63,7 +60,6 @@ namespace BookStore.Data
             {
                 var bookInDb = _ctx.Books
                     .Include(a => a.BookAuthors)
-                    .Include(t => t.BookTags)
                     .Include(p => p.Publisher)
                     .SingleOrDefault(b => b.Id == book.Id);
 
@@ -92,31 +88,12 @@ namespace BookStore.Data
                     bookInDb.BookAuthors.Add(author);
                 }
 
-                // remove intersect tag Id's (there is no need to change them)
-                var tagIds = new HashSet<int>((book.BookTags.Select(a => a.TagId)).Except(bookInDb.BookTags.Select(a => a.TagId)));
-                var inDbTagIds = new HashSet<int>((bookInDb.BookTags.Select(a => a.TagId)).Except(book.BookTags.Select(a => a.TagId)));
-
-                // remove deleted tags
-                foreach (var tagId in inDbTagIds)
-                {
-                    var tag = bookInDb.BookTags.Select(a => a).SingleOrDefault(a => a.TagId == tagId);
-                    bookInDb.BookTags.Remove(tag);
-                }
-
-                // add new tags
-                foreach (var tagId in tagIds)
-                {
-                    var tag = _ctx.Tags.Select(a => new BookTag
-                    {
-                        TagId = a.Id,
-                        Tag = a
-                    }).SingleOrDefault(a => a.TagId == tagId);
-
-                    bookInDb.BookTags.Add(tag);
-                }
-
+                var s = _ctx.Entry(bookInDb).State;
                 // copy all other fields
                 bookInDb = _mapper.Map(book, bookInDb);
+                s = _ctx.Entry(bookInDb).State;
+                //_ctx.SaveChangesAsync();
+                //base.Update(bookInDb);
             }
             catch (Exception ex)
             {

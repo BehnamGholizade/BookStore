@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BookStore.Areas.Admin.Controllers
@@ -36,18 +37,17 @@ namespace BookStore.Areas.Admin.Controllers
             return View();
         }
 
-        public IActionResult Read([DataSourceRequest]DataSourceRequest request)
+        public async Task<IActionResult> Read([DataSourceRequest]DataSourceRequest request)
         {
-            return Json(_uow.OrderRepository.GetAll()
-                .Include(x => x.User)
-                .Include(x => x.Status)
-                .ToDataSourceResult(request));
+            var orders = await _uow.OrderRepository.GetAll()
+                .Include(x => x.User).Include(x => x.Status)
+                .ToListAsync();
+            return Json(orders.ToDataSourceResult(request));
         }
 
-        [AllowAnonymous]
-        public IActionResult ReadChartData()
+        public async Task<IActionResult> ReadChartData()
         {
-            return Json(_uow.OrderRepository.GetAll()
+            return Json(await _uow.OrderRepository.GetAll()
                 .Where(x => x.CreationDate.Year == DateTime.Now.Year)
                 .GroupBy(x => new { x.CreationDate.Month, x.Status.Name })
                 .Select(g => new OrderChartViewModel
@@ -56,25 +56,23 @@ namespace BookStore.Areas.Admin.Controllers
                     Month = new DateTime(1, g.Key.Month, 1).ToString("MMM", CultureInfo.InvariantCulture),
                     StatusName = g.Key.Name,
                     TotalSum = g.Sum(s => s.TotalSum)
-                }).ToList());
+                }).ToListAsync());
         }
 
-        public IActionResult ReadOrdersByUserId([DataSourceRequest]DataSourceRequest request, string userId)
+        public async Task<IActionResult> ReadOrdersByUserId([DataSourceRequest]DataSourceRequest request, string userId)
         {
-            return Json(_uow.OrderRepository.GetAll()
-                .Include(x => x.User)
-                .Include(x => x.Status)
-                .Where(x => x.UserId == userId)
-                .ToDataSourceResult(request));
+            var orders = await _uow.OrderRepository.GetAll()
+                .Include(x => x.User).Include(x => x.Status)
+                .Where(x => x.UserId == userId).ToListAsync();
+            return Json(orders.ToDataSourceResult(request));
         }
 
-        public IActionResult ReadLines([DataSourceRequest]DataSourceRequest request, int orderId)
+        public async Task<IActionResult> ReadLines([DataSourceRequest]DataSourceRequest request, int orderId)
         {
-            return Json(_uow.OrderLineRepository.GetAll()
-                .Include(x => x.Book)
-                .Include(x => x.BookType)
-                .Where(x => x.OrderId == orderId)
-                .ToDataSourceResult(request));
+            var orders = await _uow.OrderLineRepository.GetAll()
+                .Include(x => x.Book).Include(x => x.BookType)
+                .Where(x => x.OrderId == orderId).ToListAsync();
+            return Json(orders.ToDataSourceResult(request));
         }
 
         // POST: Orders/Create

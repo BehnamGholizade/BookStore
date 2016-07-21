@@ -58,7 +58,6 @@ namespace BookStore.Migrations
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     About = table.Column<string>(nullable: true),
                     FirstName = table.Column<string>(nullable: false),
-                    FullName = table.Column<string>(nullable: true),
                     LastName = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
@@ -117,19 +116,6 @@ namespace BookStore.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Publishers", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Tags",
-                columns: table => new
-                {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
-                    Name = table.Column<string>(maxLength: 50, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Tags", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -260,16 +246,15 @@ namespace BookStore.Migrations
                     Id = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn),
                     Contents = table.Column<string>(nullable: true),
-                    EbookPrice = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    EbookPrice = table.Column<decimal>(type: "decimal(10,2)", nullable: true),
                     FullDesc = table.Column<string>(nullable: true),
-                    FullTitle = table.Column<string>(maxLength: 386, nullable: true),
                     ImgCoverUrl = table.Column<string>(nullable: true),
-                    IsVisible = table.Column<bool>(nullable: false),
                     Isbn = table.Column<string>(nullable: false),
                     Pages = table.Column<int>(nullable: false),
-                    PrintPrice = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
-                    PublicationDate = table.Column<DateTime>(nullable: true),
+                    PrintPrice = table.Column<decimal>(type: "decimal(10,2)", nullable: true),
+                    PublicationDate = table.Column<DateTime>(nullable: false),
                     PublisherId = table.Column<int>(nullable: false),
+                    SearchRank = table.Column<int>(nullable: true),
                     ShortDesc = table.Column<string>(nullable: true),
                     SubTitle = table.Column<string>(maxLength: 128, nullable: true),
                     Title = table.Column<string>(maxLength: 128, nullable: false),
@@ -326,30 +311,6 @@ namespace BookStore.Migrations
                         name: "FK_BookAuthors_Books_BookId",
                         column: x => x.BookId,
                         principalTable: "Books",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "BookTags",
-                columns: table => new
-                {
-                    BookId = table.Column<int>(nullable: false),
-                    TagId = table.Column<int>(nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_BookTags", x => new { x.BookId, x.TagId });
-                    table.ForeignKey(
-                        name: "FK_BookTags_Books_BookId",
-                        column: x => x.BookId,
-                        principalTable: "Books",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_BookTags_Tags_TagId",
-                        column: x => x.TagId,
-                        principalTable: "Tags",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -559,16 +520,6 @@ namespace BookStore.Migrations
                 column: "BookId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_BookTags_BookId",
-                table: "BookTags",
-                column: "BookId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_BookTags_TagId",
-                table: "BookTags",
-                column: "TagId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Cities_Name",
                 table: "Cities",
                 column: "Name");
@@ -629,11 +580,6 @@ namespace BookStore.Migrations
                 column: "Name");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tags_Name",
-                table: "Tags",
-                column: "Name");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Zips_CityId",
                 table: "Zips",
                 column: "CityId");
@@ -675,9 +621,6 @@ namespace BookStore.Migrations
                 name: "BookAuthors");
 
             migrationBuilder.DropTable(
-                name: "BookTags");
-
-            migrationBuilder.DropTable(
                 name: "OrderLines");
 
             migrationBuilder.DropTable(
@@ -697,9 +640,6 @@ namespace BookStore.Migrations
 
             migrationBuilder.DropTable(
                 name: "Authors");
-
-            migrationBuilder.DropTable(
-                name: "Tags");
 
             migrationBuilder.DropTable(
                 name: "Books");
