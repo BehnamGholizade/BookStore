@@ -1,5 +1,5 @@
 # BookStore
-Test e-commerce (Book shop) project with NET.Core 1.0 RTM and Telerik Kendo.
+Test e-commerce (Book shop) project with ASP.NET Core MVC 1.0 RTM and Telerik Kendo.
 ## Requirements:
 - [Visual Studio 2015 Update 3](https://www.microsoft.com/net/core#windows)
 - [.NET Core 1.0 for Visual Studio](https://www.microsoft.com/net/core#windows)
