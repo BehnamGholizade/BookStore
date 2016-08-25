@@ -5,6 +5,9 @@ Test e-commerce (Book shop) project with ASP.NET Core MVC 1.0 RTM and Telerik Ke
 - [.NET Core 1.0 for Visual Studio](https://www.microsoft.com/net/core#windows)
 - [SQL Server Express with Advanced Services](https://www.microsoft.com/en-us/cloud-platform/sql-server-editions-express) for Full Text Search feature
 
+In appsettings.json change "DefaultConnection": "Server=DESKTOP-T5HQ7K7\\SQLEXPRESS;... 
+to "DefaultConnection": "Server=<Your_SQL_Server>\\SQLEXPRESS;...
+
 ## Screenshots
 Click on the image for a larger version | Click on the image for a larger version
 ------ | ------
