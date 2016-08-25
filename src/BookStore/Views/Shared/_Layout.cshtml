@@ -45,6 +45,7 @@
         <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
         <script src="~/lib/kendo-ui/js/kendo.all.min.js"></script>
         <script src="~/lib/kendo-ui/js/kendo.aspnetmvc.min.js"></script>
+        <script src="~/lib/kendo-ui/js/cultures/kendo.culture.en-US.min.js"></script>
         <script src="~/js/site.js" asp-append-version="true"></script>
     </environment>
     <environment names="Staging,Production">
@@ -72,6 +73,9 @@
         <script src="https://kendo.cdn.telerik.com/2016.2.504/js/kendo.aspnetmvc.min.js"
                 asp-fallback-src="~/lib/kendo-ui/js/kendo.aspnetmvc.min.js"
                 asp-fallback-test="kendo.data.transports['aspnetmvc-ajax']">
+        </script>
+        <script src="https://kendo.cdn.telerik.com/2016.2.504/js/cultures/kendo.culture.en-US.min.js"
+                asp-fallback-src="~/lib/kendo-ui/js/cultures/kendo.culture.en-US.min.js">
         </script>
         <script src="~/js/site.min.js" asp-append-version="true"></script>
     </environment>
@@ -148,6 +152,7 @@
     </div>
     @RenderSection("scripts", required: false)
     <script>
+        kendo.culture("en-US");
         $(function () {
             //select active navbar menu item
             $('a[href="' + this.location.pathname + '"]').parent().addClass('active');

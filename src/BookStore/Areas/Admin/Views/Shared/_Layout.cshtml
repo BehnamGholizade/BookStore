@@ -45,7 +45,7 @@
         <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
         <script src="~/lib/kendo-ui/js/kendo.all.min.js"></script>
         <script src="~/lib/kendo-ui/js/kendo.aspnetmvc.min.js"></script>
-        @*<script src="~/lib/kendo-ui/js/cultures/kendo.culture.ru-RU.min.js"></script>*@
+        <script src="~/lib/kendo-ui/js/cultures/kendo.culture.en-US.min.js"></script>
         <script src="~/js/site.js" asp-append-version="true"></script>
     </environment>
     <environment names="Staging,Production">
@@ -74,18 +74,13 @@
                 asp-fallback-src="~/lib/kendo-ui/js/kendo.aspnetmvc.min.js"
                 asp-fallback-test="kendo.data.transports['aspnetmvc-ajax']">
         </script>
-        @*<script src="https://kendo.cdn.telerik.com/2016.2.504/js/cultures/kendo.culture.ru-RU.min.js"
-                    asp-fallback-src="~/lib/kendo-ui/js/cultures/kendo.culture.ru-RU.min.js"
-                    asp-fallback-test="kendo.data.transports['culture-ajax']">
-            </script>*@
+        <script src="https://kendo.cdn.telerik.com/2016.2.504/js/cultures/kendo.culture.en-US.min.js"
+                asp-fallback-src="~/lib/kendo-ui/js/cultures/kendo.culture.en-US.min.js">
+        </script>
         <script src="~/js/site.min.js" asp-append-version="true"></script>
     </environment>
 </head>
 <body>
-    @*<script type="text/javascript">
-        //set the Kendo UI culture
-        kendo.culture("ru-RU");
-    </script>*@
     <div class="navbar navbar-inverse navbar-fixed-top">
         <div class="container">
             <div class="navbar-header">
@@ -121,6 +116,7 @@
     </div>
     @RenderSection("scripts", required: false)
     <script>
+        kendo.culture("en-US");
         //select active navbar menu item
         $(document).ready(function () {
             $('a[href="' + this.location.pathname + '"]').parent().addClass('active');

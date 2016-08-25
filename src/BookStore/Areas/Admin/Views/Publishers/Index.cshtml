@@ -32,7 +32,7 @@
         .HtmlAttributes(new { @class = "text-center" })
         .Title("Commands").Width(200);
     })
-    .ToolBar(t => t.Create())
+    .ToolBar(t => t.Create().Text("Create"))
     .Editable(e => e.Mode(GridEditMode.InLine))
     .Editable(e => e.DisplayDeleteConfirmation(false)) //suppress standard dialog
     .Scrollable(src => src.Height(800))

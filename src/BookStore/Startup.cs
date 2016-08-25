@@ -10,6 +10,7 @@ using BookStore.Services;
 using AutoMapper;
 using BookStore.Infrastructure.Mapper;
 using Newtonsoft.Json.Serialization;
+using System.Globalization;
 
 namespace BookStore
 {
@@ -88,6 +89,10 @@ namespace BookStore
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
+            //set en-US as default culture
+            CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
+            CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("en-US");
+
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
